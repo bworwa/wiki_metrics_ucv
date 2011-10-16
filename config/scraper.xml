@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<scraper>
+	<xpath>
+		<queries>
+			<query name="history" context="none">//ul[@id="pagehistory"]</query>
+			<query name="revision" context="history">/ul/li</query>
+			<query name="mediawiki_id" context="revision">/li/a[1]@href</query>
+			<query name="date" context="revision">/li/span[@class="history-user"]/a[@class="mw-userlink"]</query>
+			<query name="minor" context="revision">/li/abbr[@class="minoredit"]</query>
+			<query name="size" context="revision">/li/span[@class="history-size"]</query>
+			<query name="comment" context="revision">/li/span[@class="comment"]</query>
+		</queries>
+	</xpath>
+</scraper>
