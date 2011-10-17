@@ -11,4 +11,4 @@
 			<query name="comment" context="revision">/li/span[@class="comment"]</query>
 		</queries>
 	</xpath>
-</scraper>
+</scraper> 
