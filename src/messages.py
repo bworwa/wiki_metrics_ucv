@@ -1,7 +1,7 @@
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from sys import exit, stderr
-from helpers import validator, logger
+from helpers import validation, log
 
 class Messages:
 
@@ -14,6 +14,11 @@ class Messages:
 	EMPTY_XML_TAG_ATTR	= "The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'"
 	EMPTY_XML_TAG_VALUE	= "The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'"
 	INVALID_IDENTIFIER	= "'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')"
+
+	"""Log's subdirectories constants"""
+
+	INTERNAL = "internal"
+	SCRAPER = "scraper"
 	
 	def __init__(self):
 
@@ -27,11 +32,15 @@ class Messages:
 
 		except IOError:
 
-			self.raise_error(self.XML_CONFIG_IO_ERROR % { "path_to_xml" : path_to_xml }, True)
+			self.raise_error(self.XML_CONFIG_IO_ERROR % {
+				"path_to_xml" : path_to_xml
+			}, self.INTERNAL)
 
 		except ExpatError:
 
-			self.raise_error(self.INVALID_XML_FILE % { "path_to_xml" : path_to_xml }, True)
+			self.raise_error(self.INVALID_XML_FILE % {
+				"path_to_xml" : path_to_xml
+			}, self.INTERNAL)
 
 		try:
 
@@ -39,11 +48,17 @@ class Messages:
 
 		except IndexError:
 
-			self.raise_error(self.XML_TAG_MISSING % { "xml_tag_name" : "messages", "path_to_xml" : path_to_xml }, True)
+			self.raise_error(self.XML_TAG_MISSING % {
+				"xml_tag_name" : "messages",
+				"path_to_xml" : path_to_xml
+			}, self.INTERNAL)
 
 		if not messages:
 
-			self.raise_error(self.XML_TAG_MISSING % { "xml_tag_name" : "message", "path_to_xml" : path_to_xml }, True)
+			self.raise_error(self.XML_TAG_MISSING % {
+				"xml_tag_name" : "message",
+				"path_to_xml" : path_to_xml
+			}, self.INTERNAL)
 
 		for message in messages:
 
@@ -51,50 +66,65 @@ class Messages:
 
 			if not message_name:
 
-				self.raise_error(self.EMPTY_XML_TAG_ATTR % { "xml_tag_attr" : "message['name']", "path_to_xml" : path_to_xml }, True)
+				self.raise_error(self.EMPTY_XML_TAG_ATTR % {
+					"xml_tag_attr" : "message['name']",
+					"path_to_xml" : path_to_xml
+				}, self.INTERNAL)
 
-			if not validator.validate_identifier(message_name):
+			if not validation.validate_identifier(message_name):
 
-				self.raise_error(self.INVALID_IDENTIFIER % { "identifier" : "message['" + message_name + "']", "path_to_xml" : path_to_xml }, True)
+				self.raise_error(self.INVALID_IDENTIFIER % {
+					"identifier" : "message['" + message_name + "']",
+					"path_to_xml" : path_to_xml
+				}, self.INTERNAL)
 
 			if not message.firstChild:
 
-				self.raise_error(self.EMPTY_XML_TAG_VALUE % { "xml_tag_name" : "message['" + message_name + "']", "path_to_xml" : path_to_xml }, True)
+				self.raise_error(self.EMPTY_XML_TAG_VALUE % {
+					"xml_tag_name" : "message['" + message_name + "']",
+					"path_to_xml" : path_to_xml
+				}, self.INTERNAL)
 
 			vars(self)[message_name] = message.firstChild.nodeValue.strip(" .")
 
 		del minidom, exit, path_to_xml, dom, messages, message, message_name
 
-	def raise_error(self, message, internal = False):
+	def raise_error(self, message, section = SCRAPER, log_it = True):
 
 		message = "Error: " + message + ".\n"
 
 		stderr.write(message)
 
-		try:
+		if log_it:
 
-			logger.log_this(message, internal)
+			try:
 
-		except IOError:
+				log.log_this(message, section)
 
-			self.issue_warning(self.GENERIC_FILE_IO_ERROR % { "path_to_file" : logger.path_to_log }, True)
+			except IOError:
 
-		del message
+				self.issue_warning(self.GENERIC_FILE_IO_ERROR % {
+					"path_to_file" : log.current_path_to_log
+				}, self.INTERNAL)
+
+		del message, section, log_it
 
 		exit(1)
 
-	def issue_warning(self, message, internal = False):
+	def issue_warning(self, message, section = SCRAPER, log_it = True):
 
 		message = "Warning: " + message + ".\n"
 
 		stderr.write(message)
 
-		try:
+		if log_it:
 
-			logger.log_this(message, internal)
+			try:
 
-		except IOError:
+				log.log_this(message, section)
 
-			pass
+			except IOError:
 
-		del message
+				pass
+
+		del message, section, log_it
