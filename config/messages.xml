@@ -9,5 +9,4 @@
 	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')</message>	
 	<message name="xpath_duplicated_query">The query '%(xpath_query_name)s' is duplicated in '%(path_to_xml)s'</message>
 	<message name="xpath_context_not_defined">The query context '%(xpath_query_context)s' is not defined in '%(path_to_xml)s'</message>
-	<message name="xpath_context_not_defined">The query context '%(xpath_query_context)s' is not defined in '%(path_to_xml)s'</message>
 </messages>
