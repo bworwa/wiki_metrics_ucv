@@ -91,6 +91,12 @@ class Messages:
 
 		del minidom, exit, path_to_xml, dom, messages, message, message_name
 
+	def __del__(self):
+
+		#TODO
+
+		pass
+
 	def raise_error(self, message, section = SCRAPER, log_it = True):
 
 		message = "Error: " + message + ".\n"

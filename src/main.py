@@ -2,6 +2,6 @@ from scraper import Scraper
 
 scraper = Scraper()
 
-print scraper.config
+scraper.run("http://en.wikipedia.org/w/index.php?title=Computer_science&action=history")
 
 del Scraper, scraper

@@ -6,6 +6,10 @@ find . -name "*.*~" -exec rm -f '{}' +
 #Then the pyc files
 find . -name "*.pyc" -exec rm -f '{}' +
 
+#And finally the /logs directory
+
+rm -r logs
+
 #And then we proceed to commit
 git init
 touch *
