@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from os import path, makedirs
 
-current_path_to_log = "../logs/"
+#Careful with this, otherwise you'll create backup directories all over the place
+current_path_to_log = "../logs"
 
 def log_this(message, section):
 
@@ -9,9 +10,7 @@ def log_this(message, section):
 
 	global current_path_to_log
 
-	current_path_to_log = current_path_to_log + section + "/"
-
-	#TODO: try - except for makedirs
+	current_path_to_log = current_path_to_log + "/" + section
 
 	if not path.exists(current_path_to_log):
 

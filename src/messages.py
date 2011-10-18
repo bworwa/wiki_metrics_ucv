@@ -1,6 +1,7 @@
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from sys import exit, stderr
+from os import path
 from helpers import validation, log
 
 class Messages:
@@ -9,6 +10,7 @@ class Messages:
 
 	XML_CONFIG_IO_ERROR	= "There was a problem while opening the XML configuration file '%(path_to_xml)s'"
 	GENERIC_FILE_IO_ERROR	= "There was a problem while opening the file '%(path_to_file)s'"
+	CANNOT_CREATE_DIRECTORY	= "There was a problem while creating the directory '%(directory)s'"
 	INVALID_XML_FILE	= "'%(path_to_xml)s' is an invalid XML file"
 	XML_TAG_MISSING		= "'%(xml_tag_name)s' tag is missing in the XML configuration file '%(path_to_xml)s'"
 	EMPTY_XML_TAG_ATTR	= "The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'"
@@ -107,6 +109,12 @@ class Messages:
 					"path_to_file" : log.current_path_to_log
 				}, self.INTERNAL)
 
+			except OSError:
+
+				self.issue_warning(self.CANNOT_CREATE_DIRECTORY % {
+					"directory" : path.split(log.current_path_to_log)[0]
+				}, self.INTERNAL)
+
 		del message, section, log_it
 
 		exit(1)
@@ -123,7 +131,7 @@ class Messages:
 
 				log.log_this(message, section)
 
-			except IOError:
+			except:
 
 				pass
 

@@ -2,6 +2,7 @@
 <messages>
 	<message name="xml_config_io_error">There was a problem while opening the XML configuration file '%(path_to_xml)s'</message>
 	<message name="generic_file_io_error">There was a problem while opening the file '%(path_to_file)s'</message>
+	<message name="cannot_create_directory">There was a problem while creating the directory '%(directory)s'</message>
 	<message name="invalid_xml_file">'%(path_to_xml)s' is an invalid XML file</message>
 	<message name="xml_tag_missing">'%(xml_tag_name)s' tag is missing in the XML configuration file '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_attr">The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'</message>
