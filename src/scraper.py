@@ -1,7 +1,7 @@
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from messages import Messages
-from helpers import validator
+from helpers import validation
 
 class Scraper:
 
@@ -20,11 +20,15 @@ class Scraper:
 
 		except IOError:
 
-			self.messages.raise_error(self.messages.XML_CONFIG_IO_ERROR % { "path_to_xml" : path_to_xml }, True)
+			self.messages.raise_error(self.messages.XML_CONFIG_IO_ERROR % {
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
 
 		except ExpatError:
 
-			self.messages.raise_error(self.messages.INVALID_XML_FILE % { "path_to_xml" : path_to_xml }, True)
+			self.messages.raise_error(self.messages.INVALID_XML_FILE % {
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
 
 		try:
 
@@ -32,11 +36,17 @@ class Scraper:
 
 		except IndexError:
 
-			self.messages.raise_error(self.messages.XML_TAG_MISSING % { "xml_tag_name" : "queries", "path_to_xml" : path_to_xml }, True)
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "queries",
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
 
 		if not xpath_queries:
 
-			self.messages.raise_error(self.messages.XML_TAG_MISSING % { "xml_tag_name" : "query", "path_to_xml" : path_to_xml }, True)
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "query",
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
 
 		for xpath_query in xpath_queries:
 
@@ -46,28 +56,44 @@ class Scraper:
 
 			if not xpath_query_name:
 
-				self.messages.raise_error(self.messages.EMPTY_XML_TAG_ATTR % { "xml_tag_attr" : "query['name']", "path_to_xml" : path_to_xml }, True)
+				self.messages.raise_error(self.messages.EMPTY_XML_TAG_ATTR % {
+					"xml_tag_attr" : "query['name']",
+					"path_to_xml" : path_to_xml
+				}, self.messages.INTERNAL)
 
-			if not validator.validate_identifier(xpath_query_name):
+			if not validation.validate_identifier(xpath_query_name):
 
-				self.messages.raise_error(self.messages.INVALID_IDENTIFIER % { "identifier" : "query['" + xpath_query_name + "']", "path_to_xml" : path_to_xml }, True)
+				self.messages.raise_error(self.messages.INVALID_IDENTIFIER % {
+					"identifier" : "query['" + xpath_query_name + "']",
+					"path_to_xml" : path_to_xml
+				}, self.messages.INTERNAL)
 
 			xpath_query_context = xpath_query.getAttribute("context").lower()
 
-			if not xpath_query_context or xpath_query_context == "none":
+			if not xpath_query_context or xpath_query_context in ["none"]:
+
 				xpath_query_context = None
 
 			if not xpath_query.firstChild:
 
-				self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % { "xml_tag_name" : "query['" + xpath_query_name + "']", "path_to_xml" : path_to_xml }, True)
+				self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
+					"xml_tag_name" : "query['" + xpath_query_name + "']",
+					"path_to_xml" : path_to_xml
+				}, self.messages.INTERNAL)
 			
 			if xpath_query_name in declared_xpath_queries:
 
-				self.messages.raise_error(self.messages.XPATH_DUPLICATED_QUERY % { "xpath_query_name" : xpath_query_name, "path_to_xml" : path_to_xml }, True)
+				self.messages.raise_error(self.messages.XPATH_DUPLICATED_QUERY % {
+					"xpath_query_name" : xpath_query_name,
+					"path_to_xml" : path_to_xml
+				}, self.messages.INTERNAL)
 
 			if not xpath_query_context in [None] + declared_xpath_queries:
 
-				self.messages.raise_error(self.messages.XPATH_CONTEXT_NOT_DEFINED % { "xpath_query_context" : xpath_query_context, "path_to_xml" : path_to_xml }, True)
+				self.messages.raise_error(self.messages.XPATH_CONTEXT_NOT_DEFINED % {
+					"xpath_query_context" : xpath_query_context,
+					"path_to_xml" : path_to_xml
+				}, self.messages.INTERNAL)
 
 			self.config["xpath_queries"].append({
 				"name" : xpath_query_name,
