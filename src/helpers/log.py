@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from os import path, makedirs
 
-#Careful with this, otherwise you'll create backup directories all over the place
+#Careful with this, otherwise you'll create logs directories all over the place
 current_path_to_log = "../logs"
 
 def log_this(message, section):
