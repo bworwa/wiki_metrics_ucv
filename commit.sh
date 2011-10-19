@@ -7,7 +7,6 @@ find . -name "*.*~" -exec rm -f '{}' +
 find . -name "*.pyc" -exec rm -f '{}' +
 
 #And finally the /logs directory
-
 rm -r logs
 
 #And then we proceed to commit

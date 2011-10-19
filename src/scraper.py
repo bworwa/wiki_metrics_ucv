@@ -4,10 +4,13 @@ from messages import Messages
 from urlparse import urlparse
 from helpers import validation
 
+import urllib2
+
 class Scraper:
 
 	config = { "xpath_queries" : {} }
 	messages = Messages()
+	user_agent = None
 
 	def __init__(self):
 
@@ -15,6 +18,7 @@ class Scraper:
 
 		path_to_xml = "../config/scraper.xml"
 
+		#We try to open the xml configuration file (^) and parse it
 		try:
 
 			dom = minidom.parse(path_to_xml)
@@ -31,6 +35,39 @@ class Scraper:
 				"path_to_xml" : path_to_xml
 			}, self.messages.INTERNAL)
 
+		#Now that the file is open we try to get the user-agent name string
+		try:
+
+			user_agent = dom.getElementsByTagName("general")[0].getElementsByTagName("user_agent")
+
+		except IndexError:
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "general",
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
+
+		try:
+
+			user_agent[0]
+
+		except IndexError:
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "user_agent",
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
+
+		if not user_agent[0].firstChild.nodeValue.strip():
+
+			self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
+				"xml_tag_name" : "user_agent",
+				"path_to_xml" : path_to_xml
+			}, self.messages.INTERNAL)
+
+		self.user_agent = user_agent[0].firstChild.nodeValue.strip()
+
+		#After that we proceed with the XPath queries
 		try:
 
 			queries = dom.getElementsByTagName("xpath")[0].getElementsByTagName("queries")
@@ -107,7 +144,7 @@ class Scraper:
 
 						xpath_query_context = None
 
-					if not xpath_query.firstChild:
+					if not xpath_query.firstChild.nodeValue.strip():
 
 						self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
 							"xml_tag_name" : "query['" + xpath_query_name + "']",
@@ -131,18 +168,30 @@ class Scraper:
 					self.config["xpath_queries"][query_host].append({
 						"name" : xpath_query_name,
 						"context" : xpath_query_context,
-						"query" : xpath_query.firstChild.nodeValue,
+						"query" : xpath_query.firstChild.nodeValue.strip(),
 						"result" : None
 					})
 
 		del dom, minidom, queries, query, query_hosts, query_host, xpath_queries, xpath_query, declared_xpath_queries
-		del xpath_query_name, xpath_query_context, path_to_xml
+		del xpath_query_name, xpath_query_context, path_to_xml, user_agent
 
 	def __del__(self):
 
 		#TODO
 
 		pass
+
+	def head_request(self, url):
+
+		request = urllib2.Request(url, None, { "User-Agent" : self.user_agent })
+
+		request.get_method = lambda : 'HEAD'
+
+		response = urllib2.urlopen(request)
+
+		del url, request
+
+		return response.info()
 
 	def run(self, url):
 
@@ -160,4 +209,8 @@ class Scraper:
 				"host" : host
 			})
 
-		del url, host
+		head_response = self.head_request(url)
+
+		print head_response.__getitem__("last-modified")
+
+		del url, host, head_response

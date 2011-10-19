@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <scraper>
+	<general>
+		<user_agent>wiki_metrics_ucv/0.01</user_agent>
+	</general>
 	<xpath>
 		<queries hosts="es.wikipedia.org, en.wikipedia.org">
 			<query name="history" context="none">//ul[@id="pagehistory"]</query>

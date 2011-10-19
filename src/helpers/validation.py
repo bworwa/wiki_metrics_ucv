@@ -8,4 +8,6 @@ def validate_identifier(identifier):
 
 		return True
 
-	return False 
+	return False
+
+

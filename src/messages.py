@@ -80,7 +80,7 @@ class Messages:
 					"path_to_xml" : path_to_xml
 				}, self.INTERNAL)
 
-			if not message.firstChild:
+			if not message.firstChild.nodeValue.strip():
 
 				self.raise_error(self.EMPTY_XML_TAG_VALUE % {
 					"xml_tag_name" : "message['" + message_name + "']",
