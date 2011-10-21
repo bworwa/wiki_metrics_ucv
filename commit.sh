@@ -6,8 +6,11 @@ find . -name "*.*~" -exec rm -f '{}' +
 #Then the pyc files
 find . -name "*.pyc" -exec rm -f '{}' +
 
-#And finally the /logs directory
+#Then the /logs directory
 rm -r logs
+
+#Then that pesky README~ file
+rm README~
 
 #And then we proceed to commit
 git init

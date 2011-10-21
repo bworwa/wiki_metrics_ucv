@@ -2,7 +2,7 @@
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from sys import exit, stderr
-from os import path
+from string import whitespace
 
 #User defined
 from helpers import validation, log
@@ -11,8 +11,8 @@ class Messages:
 
 	"""Basic set of messages, these will be overwritten later with the ones in the 'messages' XML file"""
 
-	XML_CONFIG_IO_ERROR	= "There was a problem while opening the XML configuration file '%(path_to_xml)s'"
-	GENERIC_FILE_IO_ERROR	= "There was a problem while opening the file '%(path_to_file)s'"
+	XML_CONFIG_IO_ERROR	= "There was a problem while opening/reading the XML configuration file '%(path_to_xml)s'"
+	GENERIC_FILE_IO_ERROR	= "There was a problem while opening/reading the file '%(path_to_file)s'"
 	CANNOT_CREATE_DIRECTORY	= "There was a problem while creating the directory '%(directory)s'"
 	INVALID_XML_FILE	= "'%(path_to_xml)s' is an invalid XML file"
 	XML_TAG_MISSING		= "'%(xml_tag_name)s' tag is missing in the XML configuration file '%(path_to_xml)s'"
@@ -34,8 +34,6 @@ class Messages:
 	validation = validation.Validation()
 	
 	def __init__(self):
-
-		global minidom, exit
 
 		try:
 
@@ -89,14 +87,14 @@ class Messages:
 					"path_to_xml" : self.config["path_to_config"]
 				}, self.INTERNAL)
 
-			if not message.firstChild.nodeValue.strip():
+			if not message.firstChild or not message.firstChild.nodeValue.strip():
 
 				self.raise_error(self.EMPTY_XML_TAG_VALUE % {
 					"xml_tag_name" : "message['" + message_name + "']",
 					"path_to_xml" : self.config["path_to_config"]
 				}, self.INTERNAL)
 
-			vars(self)[message_name] = message.firstChild.nodeValue.strip(" .")
+			vars(self)[message_name] = message.firstChild.nodeValue.strip(whitespace + ".")
 
 	def __del__(self):
 
@@ -125,7 +123,7 @@ class Messages:
 			except OSError:
 
 				self.issue_warning(self.CANNOT_CREATE_DIRECTORY % {
-					"directory" : path.split(self.log.current_path_to_log)[0]
+					"directory" : self.log.current_path_to_log
 				}, self.INTERNAL)
 
 		exit(1)

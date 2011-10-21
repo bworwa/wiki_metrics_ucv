@@ -1,9 +1,25 @@
-#External [dependency]
-from pycurl import Curl
+#Native
+from BaseHTTPServer import BaseHTTPRequestHandler
+from httplib import HTTPConnection
+from urlparse import urlparse
+
+class ResponseCodeError(Exception):
+
+	explanation = None
+
+	def __init__(self, explanation):
+
+		self.explanation = explanation
+
+	def __str__(self):
+
+		return repr(self.explanation)
 
 class Request:
 
-	current_headers = {}
+	current_headers = []
+
+	current_response_code = 0
 
 	def __init__(self):
 
@@ -17,41 +33,41 @@ class Request:
 
 		pass
 
-	def head_request_callback(self, response):
-		
-		response = response.strip()
-
-		if response:
-
-			if ":" in response:
-
-				header = response.split(":")
-
-				self.current_headers[header[0].rstrip()] = header[1].lstrip()
-
-			else:
-
-				self.current_headers["Response-Code"] = response.lstrip()
-
 	def head(self, url, user_agent):
 
-		self.current_headers = {}
+		parsed_url = urlparse(url)
 
-		request = Curl()
+		host = parsed_url[1]
 
-		request.setopt(request.URL, url)
+		path = parsed_url[2]
 
-		request.setopt(request.USERAGENT, str(user_agent))
+		query_string = parsed_url[4]
 
-		request.setopt(request.NOBODY, True)
+		if query_string:
+			query_string = "?" + query_string
 
-		#These two should be configurable and should be setted in scraper.py
-		request.setopt(request.FOLLOWLOCATION, True)
+		connection = HTTPConnection(host)
 
-		request.setopt(request.MAXREDIRS, 3)
+		connection.request(
+			"HEAD",
+			path + query_string,
+			None,
+			{ "User-Agent" : user_agent }
+		)
 
-		request.setopt(request.HEADERFUNCTION, self.head_request_callback)
+		response = connection.getresponse()
 
-		request.perform()
+		connection.close()
 
-		request.close()
+		self.current_response_code = response.status
+
+		self.current_headers = response.getheaders()
+
+		self.verify_response_code()
+
+	def verify_response_code(self):
+
+		#from http://docs.python.org/howto/urllib2.html#error-codes
+		if self.current_response_code > 399 and self.current_response_code < 600:
+
+			raise ResponseCodeError(BaseHTTPRequestHandler.responses[self.current_response_code][1])

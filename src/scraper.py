@@ -15,8 +15,6 @@ class Scraper:
 		"user_agent" : None
 	}
 
-	current_headers = None
-
 	messages = Messages()
 
 	validation = validation.Validation()
@@ -24,8 +22,6 @@ class Scraper:
 	request = request.Request()
 
 	def __init__(self):
-
-		global minidom
 
 		#We try to open the xml configuration file (^) and parse it
 		try:
@@ -44,10 +40,23 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		#Now that the file is open we try to get the user-agent name string
+		#Now that the file is open we try to get the root node ('scraper')
+
 		try:
 
-			user_agent = dom.getElementsByTagName("general")[0].getElementsByTagName("user_agent")
+			root = dom.getElementsByTagName("scraper")[0]
+
+		except IndexError:
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "scraper",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		#from there we try to get the user agent name string
+		try:
+
+			user_agent = root.getElementsByTagName("general")[0].getElementsByTagName("user_agent")
 
 		except IndexError:
 
@@ -67,7 +76,7 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		if not user_agent[0].firstChild.nodeValue.strip():
+		if not user_agent[0].firstChild or not user_agent[0].firstChild.nodeValue.strip():
 
 			self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
 				"xml_tag_name" : "user_agent",
@@ -79,7 +88,7 @@ class Scraper:
 		#After that we proceed with the XPath queries
 		try:
 
-			queries = dom.getElementsByTagName("xpath")[0].getElementsByTagName("queries")
+			queries = root.getElementsByTagName("xpath")[0].getElementsByTagName("queries")
 
 		except IndexError:
 
@@ -153,7 +162,7 @@ class Scraper:
 
 						xpath_query_context = None
 
-					if not xpath_query.firstChild.nodeValue.strip():
+					if not xpath_query.firstChild or not xpath_query.firstChild.nodeValue.strip():
 
 						self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
 							"xml_tag_name" : "query['" + xpath_query_name + "']",
@@ -189,7 +198,7 @@ class Scraper:
 
 	def run(self, url):
 
-		#At this point 'url' is a valid URL, no need to validate it
+		#At this point 'url' is a valid URL, there's no need to validate it
 
 		host = urlparse(url)[1]
 
@@ -197,9 +206,17 @@ class Scraper:
 
 			self.config["xpath_queries"][host]
 
-			self.request.head(url, self.config["user_agent"])
+			#TODO: except httplib exceptions
+			try:
 
-			print self.request.current_headers
+				self.request.head(url, self.config["user_agent"])
+
+			except request.ResponseCodeError as explanation:
+
+				self.messages.issue_warning(self.messages.REQUEST_ERROR % {
+					"url" : url,
+					"explanation" : explanation
+				})
 
 		except KeyError:
 

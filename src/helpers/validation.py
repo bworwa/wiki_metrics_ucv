@@ -17,6 +17,7 @@ class Validation:
 
 	def validate_identifier(self, identifier):
 
+		#According to http://docs.python.org/reference/lexical_analysis.html#identifiers
 		match = search("^[a-z_][a-z0-9_]*", identifier, IGNORECASE)
 	
 		if match:
