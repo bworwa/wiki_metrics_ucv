@@ -1,7 +1,10 @@
+#Native
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from sys import exit, stderr
 from os import path
+
+#User defined
 from helpers import validation, log
 
 class Messages:
@@ -21,27 +24,33 @@ class Messages:
 
 	INTERNAL = "internal"
 	SCRAPER = "scraper"
+
+	config = {
+		"path_to_config" : "../config/messages.xml"
+	}
+
+	log = log.Log()
+
+	validation = validation.Validation()
 	
 	def __init__(self):
 
 		global minidom, exit
 
-		path_to_xml = "../config/messages.xml"
-
 		try:
 
-			dom = minidom.parse(path_to_xml)
+			dom = minidom.parse(self.config["path_to_config"])
 
 		except IOError:
 
 			self.raise_error(self.XML_CONFIG_IO_ERROR % {
-				"path_to_xml" : path_to_xml
+				"path_to_xml" : self.config["path_to_config"]
 			}, self.INTERNAL)
 
 		except ExpatError:
 
 			self.raise_error(self.INVALID_XML_FILE % {
-				"path_to_xml" : path_to_xml
+				"path_to_xml" : self.config["path_to_config"]
 			}, self.INTERNAL)
 
 		try:
@@ -52,14 +61,14 @@ class Messages:
 
 			self.raise_error(self.XML_TAG_MISSING % {
 				"xml_tag_name" : "messages",
-				"path_to_xml" : path_to_xml
+				"path_to_xml" : self.config["path_to_config"]
 			}, self.INTERNAL)
 
 		if not messages:
 
 			self.raise_error(self.XML_TAG_MISSING % {
 				"xml_tag_name" : "message",
-				"path_to_xml" : path_to_xml
+				"path_to_xml" : self.config["path_to_config"]
 			}, self.INTERNAL)
 
 		for message in messages:
@@ -70,26 +79,24 @@ class Messages:
 
 				self.raise_error(self.EMPTY_XML_TAG_ATTR % {
 					"xml_tag_attr" : "message['name']",
-					"path_to_xml" : path_to_xml
+					"path_to_xml" : self.config["path_to_config"]
 				}, self.INTERNAL)
 
-			if not validation.validate_identifier(message_name):
+			if not self.validation.validate_identifier(message_name):
 
 				self.raise_error(self.INVALID_IDENTIFIER % {
 					"identifier" : "message['" + message_name + "']",
-					"path_to_xml" : path_to_xml
+					"path_to_xml" : self.config["path_to_config"]
 				}, self.INTERNAL)
 
 			if not message.firstChild.nodeValue.strip():
 
 				self.raise_error(self.EMPTY_XML_TAG_VALUE % {
 					"xml_tag_name" : "message['" + message_name + "']",
-					"path_to_xml" : path_to_xml
+					"path_to_xml" : self.config["path_to_config"]
 				}, self.INTERNAL)
 
 			vars(self)[message_name] = message.firstChild.nodeValue.strip(" .")
-
-		del minidom, exit, path_to_xml, dom, messages, message, message_name
 
 	def __del__(self):
 
@@ -107,21 +114,19 @@ class Messages:
 
 			try:
 
-				log.log_this(message, section)
+				self.log.log_this(message, section)
 
 			except IOError:
 
 				self.issue_warning(self.GENERIC_FILE_IO_ERROR % {
-					"path_to_file" : log.current_path_to_log
+					"path_to_file" : self.log.current_path_to_log
 				}, self.INTERNAL)
 
 			except OSError:
 
 				self.issue_warning(self.CANNOT_CREATE_DIRECTORY % {
-					"directory" : path.split(log.current_path_to_log)[0]
+					"directory" : path.split(self.log.current_path_to_log)[0]
 				}, self.INTERNAL)
-
-		del message, section, log_it
 
 		exit(1)
 
@@ -135,10 +140,8 @@ class Messages:
 
 			try:
 
-				log.log_this(message, section)
+				self.log.log_this(message, section)
 
 			except:
 
 				pass
-
-		del message, section, log_it

@@ -1,13 +1,26 @@
+#Native
 from re import search, IGNORECASE
 
-def validate_identifier(identifier):
+class Validation:
 
-	match = search("^[a-z_][a-z0-9_]*", identifier, IGNORECASE)
+	def __init__(self):
+
+		#TODO
+
+		pass
+
+	def __del__(self):
+
+		#TODO
+
+		pass
+
+	def validate_identifier(self, identifier):
+
+		match = search("^[a-z_][a-z0-9_]*", identifier, IGNORECASE)
 	
-	if match:
+		if match:
 
-		return True
+			return True
 
-	return False
-
-
+		return False

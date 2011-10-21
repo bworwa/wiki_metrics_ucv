@@ -1,31 +1,46 @@
 from datetime import date, datetime
 from os import path, makedirs
 
-#Careful with this, otherwise you'll create logs directories all over the place
-current_path_to_log = "../logs"
+class Log:
 
-def log_this(message, section):
+	#This should be configurable and setted in messages.py
+	base_path_to_log = "../logs"
 
-	"""Logs the current [message] in the directory /logs/[section]/[current_date].log. If [section] does not exist it is automatically created"""
+	current_path_to_log = None
 
-	global current_path_to_log
+	def __init__(self):
 
-	current_path_to_log = current_path_to_log + "/" + section
+		#TODO
 
-	if not path.exists(current_path_to_log):
+		pass
 
-		makedirs(current_path_to_log)
+	def __del__(self):
 
-	now = datetime.now()
+		#TODO
 
-	current_path_to_log = (current_path_to_log + "/%d-%d-%d.log") % (now.day, now.month, now.year)
+		pass
 
-	message = ("[%d:%d:%d] " + message) % (now.hour, now.minute, now.second)
+	def log_this(self, message, section):
 
-	log = open(current_path_to_log, "a")
+		"""
+			Logs the current [message] in the directory /logs/[section]/[current_date].log.
+			If [section] does not exist it is automatically created
+		"""
 
-	log.write(message)
+		self.current_path_to_log = self.base_path_to_log + "/" + section
 
-	log.close()
+		if not path.exists(self.current_path_to_log):
 
-	del message, section, current_path_to_log, now, log
+			makedirs(self.current_path_to_log)
+
+		now = datetime.now()
+
+		self.current_path_to_log = (self.current_path_to_log + "/%d-%d-%d.log") % (now.day, now.month, now.year)
+
+		message = ("[%d:%d:%d] " + message) % (now.hour, now.minute, now.second)
+
+		log = open(self.current_path_to_log, "a")
+
+		log.write(message)
+
+		log.close()
