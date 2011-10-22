@@ -50,6 +50,8 @@ class Request:
 
 		if query_string:
 			query_string = "?" + query_string
+			
+		#TODO: check params [3]
 
 		#TODO: check params [3]
 
@@ -83,6 +85,7 @@ class Request:
 	def verify_response_code(self):
 
 		#From http://docs.python.org/howto/urllib2.html#error-codes
+<<<<<<< HEAD
 		if self.current_response_code > 499 and self.current_response_code < 600:
 
 			raise ResponseCodeError(self.current_response_code, "server")
@@ -92,5 +95,8 @@ class Request:
 			raise ResponseCodeError(self.current_response_code, "client")
 
 		elif self.current_response_code > 299 and self.current_response_code < 400:
+=======
+		if self.current_response_code > 399 and self.current_response_code < 600:
+>>>>>>> de8cb616bfd9d1cb2c979f61a9741e9c30f0bd1d
 
 			raise ResponseCodeError(self.current_response_code, "redirection")
