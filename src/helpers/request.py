@@ -1,23 +1,26 @@
 #Native
-from BaseHTTPServer import BaseHTTPRequestHandler
 from httplib import HTTPConnection
 from urlparse import urlparse
 
 class ResponseCodeError(Exception):
 
-	explanation = None
+	response_code = 0
 
-	def __init__(self, explanation):
+	error_type = None
 
-		self.explanation = explanation
+	def __init__(self, response_code, error_type):
+
+		self.response_code = response_code
+
+		self.error_type = error_type
 
 	def __str__(self):
 
-		return repr(self.explanation)
+		return repr([self.response_code, self.error_type])
 
 class Request:
 
-	current_headers = []
+	current_headers = {}
 
 	current_response_code = 0
 
@@ -35,6 +38,8 @@ class Request:
 
 	def head(self, url, user_agent):
 
+		self.cleanup()
+
 		parsed_url = urlparse(url)
 
 		host = parsed_url[1]
@@ -45,6 +50,8 @@ class Request:
 
 		if query_string:
 			query_string = "?" + query_string
+
+		#TODO: check params [3]
 
 		connection = HTTPConnection(host)
 
@@ -61,13 +68,29 @@ class Request:
 
 		self.current_response_code = response.status
 
-		self.current_headers = response.getheaders()
+		for header in response.getheaders():
+
+			self.current_headers[header[0]] = header[1]
 
 		self.verify_response_code()
 
+	def cleanup(self):
+
+		self.current_response_code = 0
+
+		self.current_headers = {}
+
 	def verify_response_code(self):
 
-		#from http://docs.python.org/howto/urllib2.html#error-codes
-		if self.current_response_code > 399 and self.current_response_code < 600:
+		#From http://docs.python.org/howto/urllib2.html#error-codes
+		if self.current_response_code > 499 and self.current_response_code < 600:
 
-			raise ResponseCodeError(BaseHTTPRequestHandler.responses[self.current_response_code][1])
+			raise ResponseCodeError(self.current_response_code, "server")
+
+		elif self.current_response_code > 399 and self.current_response_code < 500:
+
+			raise ResponseCodeError(self.current_response_code, "client")
+
+		elif self.current_response_code > 299 and self.current_response_code < 400:
+
+			raise ResponseCodeError(self.current_response_code, "redirection")

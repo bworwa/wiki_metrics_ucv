@@ -1,10 +1,13 @@
 #Native
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
-from messages import Messages
 from urlparse import urlparse
+from BaseHTTPServer import BaseHTTPRequestHandler
+from rfc822 import parsedate
+from time import localtime, mktime
 
 #User defined
+from messages import Messages
 from helpers import validation, request
 
 class Scraper:
@@ -196,7 +199,7 @@ class Scraper:
 
 		pass
 
-	def run(self, url):
+	def run(self, url, last_update):
 
 		#At this point 'url' is a valid URL, there's no need to validate it
 
@@ -207,19 +210,68 @@ class Scraper:
 			self.config["xpath_queries"][host]
 
 			#TODO: except httplib exceptions
+
 			try:
 
 				self.request.head(url, self.config["user_agent"])
 
-			except request.ResponseCodeError as explanation:
+				try:
 
-				self.messages.issue_warning(self.messages.REQUEST_ERROR % {
+					last_modified = parsedate(self.request.current_headers["last-modified"])
+
+				except KeyError:
+
+					last_modified = None
+
+					self.messages.issue_warning(self.messages.HEADER_LAST_MODIFIED_MISSING % {
+						"url" : url
+					})
+
+				if not last_modified:
+
+					last_modified = localtime()
+
+				try:
+
+					last_modified = mktime(last_modified)
+
+				except OverflowError:
+
+					self.messages.raise_error(self.messages.OVERFLOW_ERROR % {
+						"expression" : "mktime(" + repr(last_modified) + ")"
+					}, self.messages.INTERNAL)
+
+				except ValueError:
+
+					self.messages.raise_error(self.messages.VALUE_ERROR % {
+						"expression" : "mktime(" + repr(last_modified) + ")"
+					}, self.messages.INTERNAL)
+
+				if last_modified >= float(last_update):
+
+					print "Needs to be updated"
+
+				else:
+
+					print "It's up to date"
+
+			except request.ResponseCodeError as error:
+
+				error = eval(str(error))
+
+				response_code = int(str(error[0]))
+
+				error_type = str(error[1])
+
+				self.messages.issue_warning(self.messages.RESPONSE_CODE_ERROR % {
 					"url" : url,
-					"explanation" : explanation
+					"code" : response_code,
+					"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
 				})
 
 		except KeyError:
 
 			self.messages.issue_warning(self.messages.HOST_NOT_DEFINED % {
-				"host" : host
+				"host" : host,
+				"url" : url
 			})

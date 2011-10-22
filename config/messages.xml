@@ -10,6 +10,9 @@
 	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')</message>	
 	<message name="xpath_duplicated_query">The query '%(xpath_query_name)s' is duplicated in '%(path_to_xml)s'</message>
 	<message name="xpath_context_not_defined">Query context '%(xpath_query_context)s' is not defined in '%(path_to_xml)s'</message>
-	<message name="host_not_defined">There are no XPath queries defined for host '%(host)s'. This URL will be ignored</message>
-	<message name="request_error">URL '%(url)s' said %(explanation)s</message>
+	<message name="host_not_defined">There are no XPath queries defined for host '%(host)s'. URL '%(url)s' will be ignored</message>
+	<message name="response_code_error">URL '%(url)s' said [%(code)d] %(explanation)s</message>
+	<message name="overflow_error">'%(expression)s' caused an overflow error</message>
+	<message name="value_error">'%(expression)s' caused a value error</message>
+	<message name="header_last_modified_missing">Header 'last-modified' is missing for URL '%(url)s'</message>
 </messages>
