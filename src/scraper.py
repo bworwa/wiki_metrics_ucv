@@ -223,7 +223,8 @@ class Scraper:
 
 					last_modified = None
 
-					self.messages.issue_warning(self.messages.HEADER_LAST_MODIFIED_MISSING % {
+					self.messages.issue_warning(self.messages.HTTP_HEADER_MISSING % {
+						"header" : "last-modified",
 						"url" : url
 					})
 
@@ -253,7 +254,9 @@ class Scraper:
 
 				else:
 
-					print "It's up to date"
+					self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
+						"url" : url
+					})
 
 			except request.ResponseCodeError as error:
 

@@ -4,6 +4,14 @@ from urlparse import urlparse
 
 class ResponseCodeError(Exception):
 
+	"""Error types"""
+
+	SERVER = "server"
+	CLIENT = "client"
+	REDIRECTION = "redirection"
+
+	"""Class variables"""
+
 	response_code = 0
 
 	error_type = None
@@ -53,8 +61,6 @@ class Request:
 			
 		#TODO: check params [3]
 
-		#TODO: check params [3]
-
 		connection = HTTPConnection(host)
 
 		connection.request(
@@ -85,18 +91,14 @@ class Request:
 	def verify_response_code(self):
 
 		#From http://docs.python.org/howto/urllib2.html#error-codes
-<<<<<<< HEAD
 		if self.current_response_code > 499 and self.current_response_code < 600:
 
-			raise ResponseCodeError(self.current_response_code, "server")
+			raise ResponseCodeError(self.current_response_code, ResponseCodeError.SERVER)
 
 		elif self.current_response_code > 399 and self.current_response_code < 500:
 
-			raise ResponseCodeError(self.current_response_code, "client")
+			raise ResponseCodeError(self.current_response_code, ResponseCodeError.CLIENT)
 
 		elif self.current_response_code > 299 and self.current_response_code < 400:
-=======
-		if self.current_response_code > 399 and self.current_response_code < 600:
->>>>>>> de8cb616bfd9d1cb2c979f61a9741e9c30f0bd1d
 
-			raise ResponseCodeError(self.current_response_code, "redirection")
+			raise ResponseCodeError(self.current_response_code, ResponseCodeError.REDIRECTION)
