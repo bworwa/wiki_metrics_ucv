@@ -45,6 +45,8 @@ class Request:
 
 		if query_string:
 			query_string = "?" + query_string
+			
+		#TODO: check params [3]
 
 		connection = HTTPConnection(host)
 
@@ -67,7 +69,7 @@ class Request:
 
 	def verify_response_code(self):
 
-		#from http://docs.python.org/howto/urllib2.html#error-codes
+		#From http://docs.python.org/howto/urllib2.html#error-codes
 		if self.current_response_code > 399 and self.current_response_code < 600:
 
 			raise ResponseCodeError(BaseHTTPRequestHandler.responses[self.current_response_code][1])
