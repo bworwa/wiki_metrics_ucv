@@ -209,54 +209,77 @@ class Scraper:
 
 			self.config["xpath_queries"][host]
 
+		except KeyError:
+
+			self.messages.issue_warning(self.messages.HOST_NOT_DEFINED % {
+				"host" : host,
+				"url" : url
+			})
+
+			return False
+
+		#TODO: except httplib exceptions
+
+		try:
+
+			self.request.make(self.request.HEAD, url, self.config["user_agent"])
+
+		except request.ResponseCodeError as response_code:
+
+			response_code = int(str(response_code))
+
+			self.messages.issue_warning(self.messages.RESPONSE_CODE_ERROR % {
+				"url" : url,
+				"code" : response_code,
+				"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
+			})
+
+			#TODO: take decisions based on response_code
+
+			return False
+
+		try:
+
+			last_modified = parsedate(self.request.current_headers["last-modified"])
+	
+		except KeyError:
+
+			self.messages.issue_warning(self.messages.HTTP_HEADER_MISSING % {
+				"header" : "last-modified",
+				"url" : url
+			})
+
+			last_modified = None
+
+		if not last_modified:
+
+			last_modified = localtime()
+
+		try:
+
+			last_modified = mktime(last_modified)
+
+		except OverflowError:
+
+			self.messages.raise_error(self.messages.OVERFLOW_ERROR % {
+				"expression" : "mktime(" + repr(last_modified) + ")"
+			}, self.messages.INTERNAL)
+
+		except ValueError:
+
+			self.messages.raise_error(self.messages.VALUE_ERROR % {
+				"expression" : "mktime(" + repr(last_modified) + ")"
+			}, self.messages.INTERNAL)
+
+		if last_modified >= float(last_update):
+
+			#URL needs to be updated
+
 			#TODO: except httplib exceptions
 
 			try:
 
-				self.request.head(url, self.config["user_agent"])
-
-				try:
-
-					last_modified = parsedate(self.request.current_headers["last-modified"])
-	
-				except KeyError:
-
-					last_modified = None
-
-					self.messages.issue_warning(self.messages.HTTP_HEADER_MISSING % {
-						"header" : "last-modified",
-						"url" : url
-					})
-
-				if not last_modified:
-
-					last_modified = localtime()
-
-				try:
-
-					last_modified = mktime(last_modified)
-
-				except OverflowError:
-
-					self.messages.raise_error(self.messages.OVERFLOW_ERROR % {
-						"expression" : "mktime(" + repr(last_modified) + ")"
-					}, self.messages.INTERNAL)
-
-				except ValueError:
-
-					self.messages.raise_error(self.messages.VALUE_ERROR % {
-						"expression" : "mktime(" + repr(last_modified) + ")"
-					}, self.messages.INTERNAL)
-
-				if last_modified >= float(last_update):
-
-					print "Needs to be updated"
-
-				else:
-
-					self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
-						"url" : url
-					})
+				self.request.make(self.request.GET, url, self.config["user_agent"])
 
 			except request.ResponseCodeError as response_code:
 
@@ -268,9 +291,15 @@ class Scraper:
 					"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
 				})
 
-		except KeyError:
+				#TODO: take decisions based on response_code
 
-			self.messages.issue_warning(self.messages.HOST_NOT_DEFINED % {
-				"host" : host,
+				return False
+
+			print self.request.current_xhtml
+
+		else:
+			#URL is up-to-date
+
+			self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
 				"url" : url
 			})

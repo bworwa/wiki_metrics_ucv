@@ -16,9 +16,18 @@ class ResponseCodeError(Exception):
 
 class Request:
 
+	"""Request types constants"""
+
+	HEAD = "HEAD"
+	GET = "GET"
+
+	"""Class variables"""
+
 	current_headers = {}
 
 	current_response_code = 0
+
+	current_xhtml = None
 
 	def __init__(self):
 
@@ -32,7 +41,7 @@ class Request:
 
 		pass
 
-	def head(self, url, user_agent):
+	def make(self, request_type, url, user_agent):
 
 		self.cleanup()
 
@@ -52,7 +61,7 @@ class Request:
 		connection = HTTPConnection(host)
 
 		connection.request(
-			"HEAD",
+			request_type,
 			path + query_string,
 			None,
 			{ "User-Agent" : user_agent }
@@ -70,11 +79,17 @@ class Request:
 
 		self.verify_response_code()
 
+		if request_type is self.GET:
+
+			self.current_xml = response.read()
+
 	def cleanup(self):
 
 		self.current_response_code = 0
 
 		self.current_headers = {}
+
+		self.current_xhtml = None
 
 	def verify_response_code(self):
 
