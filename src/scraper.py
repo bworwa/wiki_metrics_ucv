@@ -218,7 +218,7 @@ class Scraper:
 				try:
 
 					last_modified = parsedate(self.request.current_headers["last-modified"])
-
+	
 				except KeyError:
 
 					last_modified = None
@@ -258,13 +258,9 @@ class Scraper:
 						"url" : url
 					})
 
-			except request.ResponseCodeError as error:
+			except request.ResponseCodeError as response_code:
 
-				error = eval(str(error))
-
-				response_code = int(str(error[0]))
-
-				error_type = str(error[1])
+				response_code = int(str(response_code))
 
 				self.messages.issue_warning(self.messages.RESPONSE_CODE_ERROR % {
 					"url" : url,
