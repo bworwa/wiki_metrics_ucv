@@ -17,7 +17,8 @@ git init
 touch *
 git add *
 git commit -m "autocommit [`date`]"
-git push origin master
+git remote add origin git@github.com:bworwa/wiki_metrics_ucv.git
+git push -u origin master
 
 exit 0
 

@@ -5,7 +5,8 @@ from sys import exit, stderr
 from string import whitespace
 
 #User defined
-from helpers import validation, log
+from helpers.validation import Validation
+from helpers.log import Log
 
 class Messages:
 
@@ -29,9 +30,9 @@ class Messages:
 		"path_to_config" : "../config/messages.xml"
 	}
 
-	log = log.Log()
+	log = Log()
 
-	validation = validation.Validation()
+	validation = Validation()
 	
 	def __init__(self):
 

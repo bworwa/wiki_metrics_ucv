@@ -69,8 +69,6 @@ class Request:
 
 		response = connection.getresponse()
 
-		connection.close()
-
 		self.current_response_code = response.status
 
 		for header in response.getheaders():
@@ -81,7 +79,17 @@ class Request:
 
 		if request_type is self.GET:
 
-			self.current_xml = response.read()
+			current_charset = self.current_headers["content-type"].split(";")[1].replace("charset=", "").strip().upper()
+
+			if current_charset is "UTF-8":
+
+				self.current_xhtml = response.read()
+
+			else:
+
+				self.current_xhtml = unicode(response.read().decode(current_charset)).encode("UTF-8")
+
+		connection.close()
 
 	def cleanup(self):
 

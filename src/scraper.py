@@ -8,7 +8,11 @@ from time import localtime, mktime
 
 #User defined
 from messages import Messages
-from helpers import validation, request
+from helpers.validation import Validation
+from helpers.request import Request, ResponseCodeError
+
+#external
+import xpath
 
 class Scraper:
 
@@ -20,9 +24,9 @@ class Scraper:
 
 	messages = Messages()
 
-	validation = validation.Validation()
+	validation = Validation()
 
-	request = request.Request()
+	request = Request()
 
 	def __init__(self):
 
@@ -224,7 +228,7 @@ class Scraper:
 
 			self.request.make(self.request.HEAD, url, self.config["user_agent"])
 
-		except request.ResponseCodeError as response_code:
+		except ResponseCodeError as response_code:
 
 			response_code = int(str(response_code))
 
@@ -281,7 +285,7 @@ class Scraper:
 
 				self.request.make(self.request.GET, url, self.config["user_agent"])
 
-			except request.ResponseCodeError as response_code:
+			except ResponseCodeError as response_code:
 
 				response_code = int(str(response_code))
 
@@ -295,7 +299,17 @@ class Scraper:
 
 				return False
 
-			print self.request.current_xhtml
+			#XPath begins here
+
+			xpath_context = minidom.parseString(self.request.current_xhtml)
+
+			xpath_results = xpath.find(self.config["xpath_queries"][host][0]["query"], xpath_context)
+
+			if xpath_results:
+
+				self.config["xpath_queries"][host][0]["result"] = xpath_results[0]
+
+			print xpath.find("//li/abbr[@class='minoredit']", self.config["xpath_queries"][host][0]["result"])
 
 		else:
 			#URL is up-to-date
