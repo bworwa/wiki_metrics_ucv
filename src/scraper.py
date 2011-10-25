@@ -5,6 +5,7 @@ from urlparse import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler
 from rfc822 import parsedate
 from time import localtime, mktime
+from socket import gaierror
 
 #User defined
 from messages import Messages
@@ -12,7 +13,7 @@ from helpers.validation import Validation
 from helpers.request import Request, ResponseCodeError
 
 #external
-import xpath
+import xpath, tidy
 
 class Scraper:
 
@@ -20,6 +21,19 @@ class Scraper:
 		"path_to_config" : "../config/scraper.xml",
 		"xpath_queries" : {},
 		"user_agent" : None
+	}
+
+	#TODO: check all the options
+	tidy_options = {
+		"output_xml" : True,
+		"add_xml_decl" : True,
+		"bare" : True,
+		"drop_empty_paras" : True,
+		"drop_proprietary_attributes" : True,
+		"escape_cdata" : True,
+		"hide_comments" : True,
+		"join_classes" : True,
+		"char_encoding" : "utf8",
 	}
 
 	messages = Messages()
@@ -242,6 +256,14 @@ class Scraper:
 
 			return False
 
+		except gaierror:
+
+			self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
+				"url" : url
+			}, self.messages.INTERNAL)
+
+			return False
+
 		try:
 
 			last_modified = parsedate(self.request.current_headers["last-modified"])
@@ -299,19 +321,37 @@ class Scraper:
 
 				return False
 
+			except gaierror:
+
+				self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
+					"url" : url
+				}, self.messages.INTERNAL)
+
+				return False
+
 			#XPath begins here
+			xpath_main_context = minidom.parseString(
+				str(
+					tidy.parseString(self.request.current_xhtml, **self.tidy_options)
+				)
+			)
 
-			xpath_context = minidom.parseString(self.request.current_xhtml)
+			for xpath_query in self.config["xpath_queries"][host]:
 
-			xpath_results = xpath.find(self.config["xpath_queries"][host][0]["query"], xpath_context)
+				if not xpath_query["context"]:
 
-			if xpath_results:
+					xpath_results = xpath.find(xpath_query["query"], xpath_main_context)
 
-				self.config["xpath_queries"][host][0]["result"] = xpath_results[0]
+				if xpath_results:
 
-			print xpath.find("//li/abbr[@class='minoredit']", self.config["xpath_queries"][host][0]["result"])
+					xpath_query["result"] = xpath_results[0]
+
+					xpath_results = None
+
+			print self.config["xpath_queries"][host]
 
 		else:
+
 			#URL is up-to-date
 
 			self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {

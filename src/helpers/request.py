@@ -58,7 +58,7 @@ class Request:
 			
 		#TODO: check params [3]
 
-		connection = HTTPConnection(host)
+		connection = HTTPConnection(host, 80, False, 30)
 
 		connection.request(
 			request_type,
