@@ -6,6 +6,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from rfc822 import parsedate
 from time import localtime, mktime
 from socket import gaierror
+from re import findall, sub
 
 #User defined
 from messages import Messages
@@ -14,6 +15,9 @@ from helpers.request import Request, ResponseCodeError
 
 #external
 import xpath, tidy
+
+#debug
+import pprint
 
 class Scraper:
 
@@ -25,8 +29,7 @@ class Scraper:
 
 	#TODO: check all the options
 	tidy_options = {
-		"output_xml" : True,
-		"add_xml_decl" : True,
+		"output_xhtml" : True,
 		"bare" : True,
 		"drop_empty_paras" : True,
 		"drop_proprietary_attributes" : True,
@@ -208,7 +211,7 @@ class Scraper:
 						"name" : xpath_query_name,
 						"context" : xpath_query_context,
 						"query" : xpath_query.firstChild.nodeValue.strip(),
-						"result" : None
+						"result" : []
 					})
 
 	def __del__(self):
@@ -330,25 +333,75 @@ class Scraper:
 				return False
 
 			#XPath begins here
+
 			xpath_main_context = minidom.parseString(
 				str(
 					tidy.parseString(self.request.current_xhtml, **self.tidy_options)
 				)
 			)
 
+
 			for xpath_query in self.config["xpath_queries"][host]:
+
+				#TODO: except all XPath errors
+				
+				xpath_results = []
 
 				if not xpath_query["context"]:
 
-					xpath_results = xpath.find(xpath_query["query"], xpath_main_context)
+					xpath_results.append(xpath.find(xpath_query["query"], xpath_main_context))
+
+				else:
+
+					xpath_contexts = list(
+						query for query in self.config["xpath_queries"][host] if query["name"] == xpath_query["context"]
+					)[0]["result"]
+
+					if xpath_contexts:
+
+						for xpath_context in xpath_contexts:
+
+							for element in xpath_context:
+
+								element = minidom.parseString(element.toxml("UTF-8"))
+
+								xpath_results.append(xpath.find(xpath_query["query"], element))
 
 				if xpath_results:
 
-					xpath_query["result"] = xpath_results[0]
+					xpath_query["result"] = xpath_results
 
-					xpath_results = None
+			for index in range(len(self.config["xpath_queries"][host])):
 
-			print self.config["xpath_queries"][host]
+				vars(self)[self.config["xpath_queries"][host][index]["name"]] = self.config["xpath_queries"][host][index]["result"]
+
+			"""At this point you have a set of variables matching your queries specification. All the extra logic goes here"""
+
+			for revision in range(len(self.revisions[0])):
+
+				print "Revision:"
+
+				print "-meadiawiki id: " + findall("oldid=[0-9]+", self.mediawiki_id[revision][0].toxml())[0].replace("oldid=", "").strip()
+
+				print "-user: " + sub("<[^>]*?>", "", self.user[revision][0].toxml()).strip()
+
+				if self.minor[revision]:
+
+					print "-minor: True"
+
+				else:
+
+					print "-minor: False"
+
+				print "-size: " + sub("<[^>]*?>", "", self.size[revision][0].toxml()).strip()
+
+				if self.comment[revision]:
+
+					print "-comment: " + sub("<[^>]*?>", "", self.comment[revision][0].toxml()).strip()
+
+			#Debug
+			#pp = pprint.PrettyPrinter(indent=4)
+			#pp.pprint(self.config["xpath_queries"][host])
 
 		else:
 
