@@ -7,9 +7,10 @@
 	<message name="xml_tag_missing">'%(xml_tag_name)s' tag is missing in the XML configuration file '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_attr">The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_value">The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'</message>
-	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')</message>	
+	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')</message>
 	<message name="xpath_duplicated_query">Duplicated query '%(xpath_query_name)s' in '%(path_to_xml)s'</message>
 	<message name="xpath_context_not_defined">Query context '%(xpath_query_context)s' is not defined in '%(path_to_xml)s'</message>
+	<message name="invalid_attr_value">'%(attr_value)s' is not a valid value for attribute '%(attr)s' in '%(path_to_xml)s'</message>
 	<message name="host_not_defined">There are no XPath queries defined for host '%(host)s'. URL '%(url)s' will be ignored</message>
 	<message name="response_code_error">URL '%(url)s' said [%(code)d] %(explanation)s</message>
 	<message name="http_header_missing">HTTP header '%(header)s' is missing for URL '%(url)s'</message>

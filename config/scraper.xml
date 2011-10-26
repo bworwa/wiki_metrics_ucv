@@ -6,12 +6,13 @@
 	<xpath>
 		<queries hosts="es.wikipedia.org, en.wikipedia.org">
 			<query name="history" context="none">//ul[@id="pagehistory"]</query>
-			<query name="revisions" context="history">/ul/li</query>
-			<query name="mediawiki_id" context="revisions">/li/a[1]</query>
-			<query name="user" context="revisions">/li/span[@class="history-user"]/a[1]</query>
-			<query name="minor" context="revisions">/li/abbr[@class="minoredit"]</query>
-			<query name="size" context="revisions">/li/span[@class="history-size"]</query>
-			<query name="comment" context="revisions">/li/span[@class="comment"]</query>
+			<query name="revision" context="history">/ul/li</query>
+			<query name="mediawiki_id" context="revision">/li/a[1]/@href</query>
+			<query name="date" context="revision" get_value="true">/li/a[1]</query>
+			<query name="user" context="revision" get_value="true">/li/span[@class="history-user"]/a[1]</query>
+			<query name="minor" context="revision" get_value="true">/li/abbr[@class="minoredit"]</query>
+			<query name="size" context="revision" get_value="true">/li/span[@class="history-size"]</query>
+			<query name="comment" context="revision" get_value="true">/li/span[@class="comment"]</query>
 		</queries>
 	</xpath>
 </scraper>
