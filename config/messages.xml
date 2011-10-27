@@ -15,7 +15,8 @@
 	<message name="response_code_error">URL '%(url)s' said [%(code)d] %(explanation)s</message>
 	<message name="http_header_missing">HTTP header '%(header)s' is missing for URL '%(url)s'</message>
 	<message name="url_not_modified">URL '%(url)s' has not been modified since last update. This URL will be ignored</message>
-	<message name="connection_problem">A connection problem has been encountered, URL '%(url)' has been ignored.</message>
+	<message name="connection_problem">A connection problem has been encountered, URL '%(url)s' has been ignored</message>
+	<message name="invalid_url">URL '%(url)s' is not a valid URL and will be ignored</message>
 
 	<message name="overflow_error">'%(expression)s' caused an overflow error</message>
 	<message name="value_error">'%(expression)s' caused a value error</message>

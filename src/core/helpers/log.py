@@ -1,10 +1,14 @@
-#Native
+
+"""Core libraries, do not change"""
+
+# Native
 from datetime import date, datetime
 from os import path, makedirs
 
 class Log:
 
 	#This should be configurable
+
 	base_path_to_log = "../logs"
 
 	current_path_to_log = None

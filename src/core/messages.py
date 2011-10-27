@@ -1,4 +1,7 @@
-#Native
+
+"""Core libraries, do not change"""
+
+# Native
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from sys import exit, stderr

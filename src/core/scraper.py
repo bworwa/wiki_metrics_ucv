@@ -7,7 +7,7 @@ from xml.parsers.expat import ExpatError
 from urlparse import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler
 from rfc822 import parsedate
-from time import localtime, mktime
+from time import time, localtime, mktime
 from socket import gaierror
 
 # User defined
@@ -16,32 +16,15 @@ from helpers.validation import Validation
 from helpers.request import Request, ResponseCodeError
 
 # External
-import xpath, tidy
-
-"""User defined libraries goes here""""
-
-# Native
-from urlparse import parse_qs
+import xpath
 
 class Scraper:
 
 	config = {
 		"path_to_config" : "../config/scraper.xml",
 		"xpath_queries" : {},
-		"user_agent" : None
-	}
-
-	tidy_options = {
-		"output_xhtml" : True,
-		"add_xml_decl" : True,
-		"bare" : True,
-		"drop_empty_paras" : True,
-		"drop_proprietary_attributes" : True,
-		"escape_cdata" : True,
-		"hide_comments" : True,
-		"join_classes" : True,
-		"char_encoding" : "utf8",
-		"output_bom" : True
+		"user_agent" : None,
+		"charset" : "UTF8"
 	}
 
 	messages = Messages()
@@ -52,7 +35,7 @@ class Scraper:
 
 	def __init__(self):
 
-		"""Contructor"""
+		"""Constructor"""
 
 		# We try to open the xml configuration file (self.config["path_to_config"]) and parse it
 		# WE WILL NOT TIDY IT, it must be a valid XML file
@@ -63,7 +46,7 @@ class Scraper:
 
 		except IOError:
 
-			# I/O error, e.g: open/read/race conditions, low level stuff
+			# I/O error, e.g: open/read/race conditions, low level stuff; program halted
 
 			self.messages.raise_error(self.messages.XML_CONFIG_IO_ERROR % {
 				"path_to_xml" : self.config["path_to_config"]
@@ -71,7 +54,7 @@ class Scraper:
 
 		except ExpatError:
 
-			# Invalid XML file
+			# Invalid XML file, program halted
 
 			self.messages.raise_error(self.messages.INVALID_XML_FILE % {
 				"path_to_xml" : self.config["path_to_config"]
@@ -85,29 +68,33 @@ class Scraper:
 
 		except IndexError:
 
-			# The 'scraper' tag is missing 
+			# The 'scraper' node is missing, program halted
 
 			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
 				"xml_tag_name" : "scraper",
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		# We try to get the user agent name string from the XML configuration file
+		# We try to get the 'general' node from the root node
 
 		try:
 
-			user_agent = root.getElementsByTagName("general")[0].getElementsByTagName("user_agent")
+			general = root.getElementsByTagName("general")[0]
 
 		except IndexError:
 
-			# The 'general' tag containing the 'user_agent' tag is missing
+			# The 'general' node is missing, program halted
 
 			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
 				"xml_tag_name" : "general",
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		# We 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
+		# We get the 'user_agent' tag from the general node
+
+		user_agent = general.getElementsByTagName("user_agent")
+			
+		# And we 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
 
 		try:
 
@@ -115,7 +102,7 @@ class Scraper:
 
 		except IndexError:
 
-			# The tags 'user_agent' is missing
+			# The tag 'user_agent' is missing, program halted
 
 			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
 				"xml_tag_name" : "user_agent",
@@ -126,7 +113,7 @@ class Scraper:
 
 		if not user_agent[0].firstChild or not user_agent[0].firstChild.nodeValue.strip():
 
-			# 'user_agent' tag content doesn't exists or is an empty string (whitespace)
+			# 'user_agent' tag content doesn't exists (empty) or is an empty string (whitespace), program halted
 
 			self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
 				"xml_tag_name" : "user_agent",
@@ -135,24 +122,28 @@ class Scraper:
 
 		self.config["user_agent"] = user_agent[0].firstChild.nodeValue.strip()
 
-		# We try to get the XPath queries found in 'xpath' > 'queries'
+		# We try to get the 'xpath' node from the root node
 
 		try:
 
-			queries = root.getElementsByTagName("xpath")[0].getElementsByTagName("queries")
+			xpath_config = root.getElementsByTagName("xpath")[0]
 
 		except IndexError:
 
-			# 'xpath' tag is missing
+			# 'xpath' node is missing, program halted
 
 			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
 				"xml_tag_name" : "xpath",
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
+		# We try to get the 'queries' tag from the 'xpath' node
+
+		queries = xpath_config.getElementsByTagName("queries")
+
 		if not queries:
 
-			# 'queries' tag is missing
+			# 'queries' tag is missing, program halted
 
 			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
 				"xml_tag_name" : "queries",
@@ -169,25 +160,25 @@ class Scraper:
 			query_hosts = filter(None, query_hosts)
 
 			query_hosts = list(
-				query_host.strip() for query_host in query_hosts
+				query_host.lstrip() for query_host in query_hosts
 			)
 
 			if not query_hosts:
 
-				# Attribute 'hosts' was not specified or was empty
+				# Attribute 'hosts' was not specified (empty) or was empty (whitespace), program halted
 
 				self.messages.raise_error(self.messages.EMPTY_XML_TAG_ATTR % {
 					"xml_tag_attr" : "queries['hosts']",
 					"path_to_xml" : self.config["path_to_config"]
 				}, self.messages.INTERNAL)
 
-			# We get the current set of queries corresponding to the lasts hosts
+			# We get the current set of queries corresponding to the hosts (^)
 
 			xpath_queries = query.getElementsByTagName("query")
 
 			if not xpath_queries:
 
-				# 'query' tag is missing
+				# 'query' tag is missing. Every host must have at least one query, program halted
 
 				self.messages.raise_error(self.messages.XML_TAG_MISSING % {
 					"xml_tag_name" : "query",
@@ -202,7 +193,7 @@ class Scraper:
 
 				for xpath_query in xpath_queries:
 
-					# We need to have a list of used query names to avoid duplicates
+					# We need to have a list of used query names to avoid duplicated names
 
 					declared_xpath_queries = list(
 						declared_xpath_query['name'] for declared_xpath_query in self.config["xpath_queries"][query_host]
@@ -214,7 +205,7 @@ class Scraper:
 
 					if not xpath_query_name:
 
-						# Attribute 'name' is missing
+						# Attribute 'name' is missing. Every query must have a name, program halted
 
 						self.messages.raise_error(self.messages.EMPTY_XML_TAG_ATTR % {
 							"xml_tag_attr" : "query['name']",
@@ -225,6 +216,9 @@ class Scraper:
 					# Therefore we validate the name
 
 					if not self.validation.validate_identifier(xpath_query_name):
+
+						# The name is not a valid Python identifier and will, most likely, cause problems later
+						# Program halted
 
 						self.messages.raise_error(self.messages.INVALID_IDENTIFIER % {
 							"identifier" : "query['" + xpath_query_name + "']",
@@ -237,6 +231,9 @@ class Scraper:
 
 					if not xpath_query_context or xpath_query_context == "none":
 
+						# If it doesn't exists, it's empty or 'none' we default to None
+						# No warnings needed as it is an opcional attribute
+
 						xpath_query_context = None
 
 					# We get the query attribute 'get_value' and validate its content
@@ -244,6 +241,9 @@ class Scraper:
 					xpath_get_value = xpath_query.getAttribute("get_value").strip().lower()
 
 					if not xpath_get_value or xpath_get_value == "false":
+
+						# If it doesn't exists, it's empty or 'false' we default to False
+						# No warnings needed as it is an opcional attribute
 
 						xpath_get_value = False
 
@@ -253,7 +253,7 @@ class Scraper:
 
 					else:
 
-						# The value of the query attribute 'context' is invalid
+						# The content of the attribute 'xpath_get_value' is invalid (!= 'true' | 'false' | empty | '')
 						# We default to false and issue a warning
 
 						xpath_get_value = False
@@ -266,7 +266,7 @@ class Scraper:
 
 					if not xpath_query.firstChild or not xpath_query.firstChild.nodeValue.strip():
 
-						# The XPath query is empty and it shouldn't
+						# The XPath query is empty and it shouldn't, program halted
 
 						self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
 							"xml_tag_name" : "query['" + xpath_query_name + "']",
@@ -276,7 +276,7 @@ class Scraper:
 					if xpath_query_name in declared_xpath_queries:
 
 						# There are two XPath queries with the same name
-						# That shouldn't happen
+						# That shouldn't happen as every query name must be unique, program halted
 
 						self.messages.raise_error(self.messages.XPATH_DUPLICATED_QUERY % {
 							"xpath_query_name" : xpath_query_name,
@@ -286,7 +286,8 @@ class Scraper:
 					if not xpath_query_context in [None] + declared_xpath_queries:
 
 						# The XPath query context isn't defined
-						# That shouldn't happen
+						# That shouldn't happen as every context must be defined as a query beforehand
+						# Program halted
 
 						self.messages.raise_error(self.messages.XPATH_CONTEXT_NOT_DEFINED % {
 							"xpath_query_context" : xpath_query_context,
@@ -321,15 +322,32 @@ class Scraper:
 		in the XML configuration file. These custom set of variables will hold the XPath queries results.
 		"""
 
-		#At this point 'url' is a valid URL, there's no need to re-validate it
+		# At this point 'url' must be a valid URL
+		# However we revalidate it as this class is solution independent
+
+		if not self.validation.validate_url(url):
+
+			# The URL is invalid. There's nothing to do, we skip the URL and move on to the next
+
+			self.messages.issue_warning(self.messages.INVALID_URL % {
+				"url" : url
+			})
+
+			return False
+
+		# We get the host out of the URL
 
 		host = urlparse(url)[1]
 
 		try:
 
+			# And 'poke' self.config["xpath_queries"][host] to see if there are any queries defined for that host
+
 			self.config["xpath_queries"][host]
 
 		except KeyError:
+
+			# The host doesn't have any queries defined. There's nothing to do, we skip the URL and move on to the next
 
 			self.messages.issue_warning(self.messages.HOST_NOT_DEFINED % {
 				"host" : host,
@@ -338,13 +356,23 @@ class Scraper:
 
 			return False
 
+		# We need to get the resource headers in order to attempt to know if the resource has been modified since 'last_update'
+		# And avoid a possible unnecessary GET request
+		#
+		# Since the header 'last-modified' is optional, in case it doesn't exist for any given resource (assuming a 2xx response code)
+		# We must force the visit to that resource
+
 		#TODO: except httplib exceptions
 
 		try:
 
+			# We make the HEAD request
+
 			self.request.make(self.request.HEAD, url, self.config["user_agent"])
 
 		except ResponseCodeError as response_code:
+
+			# We got an error response code (3xx, 4xx, 5xx). We don't skip the URL yet, decisions need to be made
 
 			response_code = int(str(response_code))
 
@@ -360,6 +388,8 @@ class Scraper:
 
 		except gaierror:
 
+			# Failed DNS server lookup, connection problems, low level stuff.
+
 			self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
 				"url" : url
 			}, self.messages.INTERNAL)
@@ -368,26 +398,39 @@ class Scraper:
 
 		try:
 
+			# We try to get the last-modified header from the last request
+			#
+			# If we reach this point we can assume the request was successful (2xx)
+
 			last_modified = parsedate(self.request.current_headers["last-modified"])
 	
 		except KeyError:
+
+			last_modified = None
+
+			# The server didn't specified a last-modified header for the resource...
 
 			self.messages.issue_warning(self.messages.HTTP_HEADER_MISSING % {
 				"header" : "last-modified",
 				"url" : url
 			})
 
-			last_modified = None
-
 		if not last_modified:
 
-			last_modified = localtime()
+			# ... no problem! we use the local time as last-modified and add 24 hours to force the visit
+
+			last_modified = localtime(time() + (24 * 60 * 60))
 
 		try:
 
-			last_modified = mktime(last_modified)
+			# We transform the 9-tuple date into a UNIX timestamp
+
+			last_modified = mktime(last_modified) + (24 * 60 * 60)
 
 		except OverflowError:
+
+			# Somehow localtime() or the server returned an invalid date
+			# This is very rare but it can happen
 
 			self.messages.raise_error(self.messages.OVERFLOW_ERROR % {
 				"expression" : "mktime(" + repr(last_modified) + ")"
@@ -395,11 +438,13 @@ class Scraper:
 
 		except ValueError:
 
+			# Same as the former
+
 			self.messages.raise_error(self.messages.VALUE_ERROR % {
 				"expression" : "mktime(" + repr(last_modified) + ")"
 			}, self.messages.INTERNAL)
 
-		if last_modified >= float(last_update):
+		if last_modified > float(last_update):
 
 			#URL needs to be updated
 
@@ -407,9 +452,13 @@ class Scraper:
 
 			try:
 
-				self.request.make(self.request.GET, url, self.config["user_agent"])
+				# We make the GET request
+
+				self.request.make(self.request.GET, url, self.config["user_agent"], self.config["charset"])
 
 			except ResponseCodeError as response_code:
+
+				# We got an error response code (3xx, 4xx, 5xx). We don't skip the URL yet, decisions need to be made
 
 				response_code = int(str(response_code))
 
@@ -425,86 +474,66 @@ class Scraper:
 
 			except gaierror:
 
+				# Failed DNS server lookup, connection problems, low level stuff.
+
 				self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
 					"url" : url
 				}, self.messages.INTERNAL)
 
 				return False
 
-			#XPath begins here
+			# XPath querying begins here (A.K.A "the interesting part")
 
-			xpath_main_context = minidom.parseString(
-				str(
-					tidy.parseString(self.request.current_xhtml, **self.tidy_options)
-				)
-			)
+			# xpath_main_context = whole XHTML document. This is for those queries that doesn't have any context defined
 
+			xpath_main_context = minidom.parseString(self.request.current_xhtml)
 
 			for xpath_query in self.config["xpath_queries"][host]:
 
 				#TODO: except all XPath errors
-				
-				xpath_results = []
 
 				if not xpath_query["context"]:
 
-					xpath_results.append(xpath.find(xpath_query["query"], xpath_main_context))
+					xpath_result = xpath.find(xpath_query["query"], xpath_main_context)
+
+					for result in xpath_result:
+
+						xpath_query["result"].append(result)
 
 				else:
 
-					xpath_contexts = list(
-						query for query in self.config["xpath_queries"][host] if query["name"] == xpath_query["context"]
-					)[0]["result"]
+					for query in self.config["xpath_queries"][host]:
 
-					if xpath_contexts:
+						if query['name'] == xpath_query["context"]:
 
-						for xpath_context in xpath_contexts:
+							xpath_context = query['result']
 
-							for node in xpath_context:
+							break
 
-								node = minidom.parseString(node.toxml("UTF-8"))
+					for context in xpath_context:
 
-								if xpath_query["get_value"]:
+						node = minidom.parseString(context.toxml(self.config["charset"]))
 
-									xpath_results.append(xpath.findvalue(xpath_query["query"], node))
+						if xpath_query["get_value"]:
 
-								else:
+							xpath_result = xpath.findvalue(xpath_query["query"], node)
 
-									xpath_results.append(xpath.find(xpath_query["query"], node))
+							xpath_query["result"].append(xpath_result)
 
-				if xpath_results:
+						else:
 
-					xpath_query["result"] = xpath_results
+							xpath_result = xpath.find(xpath_query["query"], node)
 
-			for index in range(len(self.config["xpath_queries"][host])):
+							for result in xpath_result:
 
-				vars(self)[self.config["xpath_queries"][host][index]["name"]] = self.config["xpath_queries"][host][index]["result"]
+								xpath_query["result"].append(result)
 
-			"""At this point you have a set of variables matching your queries specification. All the extra logic goes here"""
 
-			for revision in range(len(self.revision[0])):
-
-				print "Revision " + str(revision + 1) + ":"
-
-				print "-meadiawiki id: " + parse_qs(self.mediawiki_id[revision][0].nodeValue)["oldid"][0]
-
-				print "-date: " + repr(self.date[revision])
-
-				print "-user: " + repr(self.user[revision])
-
-				print "-minor: " + repr(self.minor[revision])
-
-				print "-size: " + repr(self.size[revision])
-
-				print "-comment: " + repr(self.comment[revision])
-
-			#Debug
-			#pp = pprint.PrettyPrinter(indent=4)
-			#pp.pprint(self.config["xpath_queries"][host])
+				vars(self)[xpath_query["name"]] = xpath_query["result"]
 
 		else:
 
-			#URL is up-to-date
+			#URL is up-to-date, we issue a warning indicating this (so it can be logged) and skip the URL
 
 			self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
 				"url" : url
