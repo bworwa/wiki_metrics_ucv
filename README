@@ -1,3 +1,8 @@
 Dependencies so far:
+
 	py-dom-xpath: sudo easy_install py-dom-xpath (http://py-dom-xpath.googlecode.com/svn/trunk/doc/index.html)
 	uTidyLib: sudo apt-get install python-utidylib (http://utidylib.berlios.de/)
+
+Requirements so far:
+
+	Python 2.7.2+

@@ -9,6 +9,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from rfc822 import parsedate
 from time import time, localtime, mktime
 from socket import gaierror
+from httplib import HTTPException
 
 # User defined
 from messages import Messages
@@ -150,6 +151,13 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
+		# This is a sandbox we create to test the XPath queries. There's no point in having to do a GET request
+		# in order to see if a query is invalid
+		#
+		# This is a controlled enviroment so there's no need to try:except it
+
+		sandbox = minidom.parseString("<sandbox>test</sandbox>")
+
 		for query in queries:
 
 			# We need to associate every set of queries to one or serveral hosts
@@ -272,6 +280,8 @@ class Scraper:
 							"xml_tag_name" : "query['" + xpath_query_name + "']",
 							"path_to_xml" : self.config["path_to_config"]
 						}, self.messages.INTERNAL)
+
+					query = xpath_query.firstChild.nodeValue.strip()
 			
 					if xpath_query_name in declared_xpath_queries:
 
@@ -294,6 +304,48 @@ class Scraper:
 							"path_to_xml" : self.config["path_to_config"]
 						}, self.messages.INTERNAL)
 
+					# We proceed to test the XPath query inthe sandbox
+
+					try:
+
+						xpath.find(query, sandbox)
+
+					except xpath.XPathNotImplementedError:
+
+						self.messages.raise_error(self.messages.XPATH_FEATURE_NOT_IMPLEMENTED % {
+							"query" : query
+						}, self.messages.INTERNAL)
+
+					except xpath.XPathParseError:
+
+						self.messages.raise_error(self.messages.XPATH_PARSE_ERROR % {
+							"query" : query
+						}, self.messages.INTERNAL)
+
+					except xpath.XPathTypeError:
+
+						self.messages.raise_error(self.messages.XPATH_TYPE_ERROR % {
+							"query" : query
+						}, self.messages.INTERNAL)
+
+					except xpath.XPathUnknownFunctionError:
+
+						self.messages.raise_error(self.messages.XPATH_UNKNOWN_FUNCTION_ERROR % {
+							"query" : query
+						}, self.messages.INTERNAL)
+
+					except xpath.XPathUnknownPrefixError:
+
+						self.messages.raise_error(self.messages.XPATH_UNKNOWN_PREFIX_ERROR % {
+							"query" : query
+						}, self.messages.INTERNAL)
+
+					except xpath.XPathUnknownVariableError:
+
+						self.messages.raise_error(self.messages.XPATH_UNKNOWN_VARIABLE_ERROR % {
+							"query" : query
+						}, self.messages.INTERNAL)
+
 					# Finally, we append a new dictionary in the self.config["xpath_queries"][query_host]
 					# There will be one dictionary per query and therefore multiple dictionaries per host
 					#
@@ -303,7 +355,7 @@ class Scraper:
 					self.config["xpath_queries"][query_host].append({
 						"name" : xpath_query_name,
 						"context" : xpath_query_context,
-						"query" : xpath_query.firstChild.nodeValue.strip(),
+						"query" : query,
 						"get_value" : xpath_get_value,
 						"result" : []
 					})
@@ -319,7 +371,9 @@ class Scraper:
 		"""
 		Given an URL and a 'last update' timestamp, it applies the corresponding XPath queries to the resource content
 		(assuming we're talking about a (X)HTML resource) and creates a custom set of variables named after the queries
-		in the XML configuration file. These custom set of variables will hold the XPath queries results.
+		In the XML configuration file. These custom set of variables will hold the XPath queries results
+
+		Returns the HTTP response code of the request or False if an error occurs
 		"""
 
 		# At this point 'url' must be a valid URL
@@ -362,17 +416,15 @@ class Scraper:
 		# Since the header 'last-modified' is optional, in case it doesn't exist for any given resource (assuming a 2xx response code)
 		# We must force the visit to that resource
 
-		#TODO: except httplib exceptions
-
 		try:
 
 			# We make the HEAD request
 
-			self.request.make(self.request.HEAD, url, self.config["user_agent"])
+			self.request.make(url, self.request.HEAD, self.config["user_agent"])
 
 		except ResponseCodeError as response_code:
 
-			# We got an error response code (3xx, 4xx, 5xx). We don't skip the URL yet, decisions need to be made
+			# We got an error response code (3xx, 4xx, 5xx). We skip the URL and return the response code
 
 			response_code = int(str(response_code))
 
@@ -382,7 +434,20 @@ class Scraper:
 				"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
 			})
 
-			#TODO: take decisions based on response_code
+			return response_code
+
+		except HTTPException:
+
+			# There was a problem while trying to connect to 'url'
+			#
+			# Possible errors are: BadStatusLine, ResponseNotReady, CannotSendHeader, CannotSendRequest, ImproperConnectionState
+			# IncompleteRead, UnimplementedFileMode, UnknownTransferEncoding, UnknownProtocol, InvalidURL, NotConnected
+			#
+			# [Low] TODO: break down HTTPException to (^) those.
+
+			self.messages.raise_error(self.messages.REQUEST_FAILED % {
+				"url" : url
+			})
 
 			return False
 
@@ -392,7 +457,7 @@ class Scraper:
 
 			self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
 				"url" : url
-			}, self.messages.INTERNAL)
+			})
 
 			return False
 
@@ -436,6 +501,8 @@ class Scraper:
 				"expression" : "mktime(" + repr(last_modified) + ")"
 			}, self.messages.INTERNAL)
 
+			return False
+
 		except ValueError:
 
 			# Same as the former
@@ -444,21 +511,21 @@ class Scraper:
 				"expression" : "mktime(" + repr(last_modified) + ")"
 			}, self.messages.INTERNAL)
 
+			return False
+
 		if last_modified > float(last_update):
 
 			#URL needs to be updated
-
-			#TODO: except httplib exceptions
 
 			try:
 
 				# We make the GET request
 
-				self.request.make(self.request.GET, url, self.config["user_agent"], self.config["charset"])
+				self.request.make(url, self.request.GET, self.config["user_agent"], self.config["charset"])
 
 			except ResponseCodeError as response_code:
 
-				# We got an error response code (3xx, 4xx, 5xx). We don't skip the URL yet, decisions need to be made
+				# We got an error response code (3xx, 4xx, 5xx). We skip the URL and return the response code
 
 				response_code = int(str(response_code))
 
@@ -468,7 +535,21 @@ class Scraper:
 					"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
 				})
 
-				#TODO: take decisions based on response_code
+				return response_code
+
+			except HTTPException:
+
+				# There was a problem while trying to connect to 'url'
+				#
+				# Possible errors are: BadStatusLine, ResponseNotReady, CannotSendHeader, CannotSendRequest,
+				# ImproperConnectionState, IncompleteRead, UnimplementedFileMode, UnknownTransferEncoding,
+				# UnknownProtocol, InvalidURL, NotConnected
+				#
+				# [Low] TODO: break down HTTPException to (^) those.
+
+				self.messages.raise_error(self.messages.REQUEST_FAILED % {
+					"url" : url
+				})
 
 				return False
 
@@ -478,7 +559,7 @@ class Scraper:
 
 				self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
 					"url" : url
-				}, self.messages.INTERNAL)
+				})
 
 				return False
 
@@ -489,8 +570,6 @@ class Scraper:
 			xpath_main_context = minidom.parseString(self.request.current_xhtml)
 
 			for xpath_query in self.config["xpath_queries"][host]:
-
-				#TODO: except all XPath errors
 
 				if not xpath_query["context"]:
 
@@ -530,6 +609,13 @@ class Scraper:
 
 
 				vars(self)[xpath_query["name"]] = xpath_query["result"]
+
+			# We need to clean the queries results in order to allow subsequent 'self.run' calls
+			# These results are already stored in their respective variables
+
+			for xpath_query in self.config["xpath_queries"][host]:
+
+				xpath_query["result"] = []
 
 		else:
 

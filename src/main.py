@@ -12,13 +12,21 @@ from core.scraper import Scraper
 host = "http://en.wikipedia.org"
 rest = "/w/index.php?title=Du%C8%99mani&action=history&limit=4"
 
+scraper = Scraper()
+
 while True:
 
-	scraper = Scraper()
-
-	print "Visiting " + host + rest
 
 	scraper.run(host + rest, "1319302255")
+
+	for i in range(len(scraper.revision)):
+
+		print scraper.mediawiki_id[i].nodeValue
+		print scraper.date[i]
+		print scraper.user[i]
+		print scraper.minor[i]
+		print scraper.size[i]
+		print scraper.comment[i]
 
 	try:
 

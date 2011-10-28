@@ -9,7 +9,7 @@ class Log:
 
 	#This should be configurable
 
-	base_path_to_log = "../logs"
+	BASE_PATH_TO_LOG = "../logs"
 
 	current_path_to_log = None
 
@@ -32,7 +32,7 @@ class Log:
 			If [section] does not exist it is automatically created
 		"""
 
-		self.current_path_to_log = self.base_path_to_log + "/" + section
+		self.current_path_to_log = self.BASE_PATH_TO_LOG + "/" + section
 
 		if not path.exists(self.current_path_to_log):
 
