@@ -304,7 +304,7 @@ class Scraper:
 							"path_to_xml" : self.config["path_to_config"]
 						}, self.messages.INTERNAL)
 
-					# We proceed to test the XPath query inthe sandbox
+					# We proceed to test the XPath query in the sandbox
 
 					try:
 
@@ -362,7 +362,7 @@ class Scraper:
 
 	def __del__(self):
 
-		#TODO
+		# [Low] TODO
 
 		pass
 
@@ -461,166 +461,170 @@ class Scraper:
 
 			return False
 
-		try:
-
-			# We try to get the last-modified header from the last request
-			#
-			# If we reach this point we can assume the request was successful (2xx)
-
-			last_modified = parsedate(self.request.current_headers["last-modified"])
-	
-		except KeyError:
-
-			last_modified = None
-
-			# The server didn't specified a last-modified header for the resource...
-
-			self.messages.issue_warning(self.messages.HTTP_HEADER_MISSING % {
-				"header" : "last-modified",
-				"url" : url
-			})
-
-		if not last_modified:
-
-			# ... no problem! we use the local time as last-modified and add 24 hours to force the visit
-
-			last_modified = localtime(time() + (24 * 60 * 60))
-
-		try:
-
-			# We transform the 9-tuple date into a UNIX timestamp
-
-			last_modified = mktime(last_modified) + (24 * 60 * 60)
-
-		except OverflowError:
-
-			# Somehow localtime() or the server returned an invalid date
-			# This is very rare but it can happen
-
-			self.messages.raise_error(self.messages.OVERFLOW_ERROR % {
-				"expression" : "mktime(" + repr(last_modified) + ")"
-			}, self.messages.INTERNAL)
-
-			return False
-
-		except ValueError:
-
-			# Same as the former
-
-			self.messages.raise_error(self.messages.VALUE_ERROR % {
-				"expression" : "mktime(" + repr(last_modified) + ")"
-			}, self.messages.INTERNAL)
-
-			return False
-
-		if last_modified > float(last_update):
-
-			#URL needs to be updated
+		if self.request.current_content_type == "text/html":
 
 			try:
 
-				# We make the GET request
-
-				self.request.make(url, self.request.GET, self.config["user_agent"], self.config["charset"])
-
-			except ResponseCodeError as response_code:
-
-				# We got an error response code (3xx, 4xx, 5xx). We skip the URL and return the response code
-
-				response_code = int(str(response_code))
-
-				self.messages.issue_warning(self.messages.RESPONSE_CODE_ERROR % {
-					"url" : url,
-					"code" : response_code,
-					"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
-				})
-
-				return response_code
-
-			except HTTPException:
-
-				# There was a problem while trying to connect to 'url'
+				# We try to get the last-modified header from the last request
 				#
-				# Possible errors are: BadStatusLine, ResponseNotReady, CannotSendHeader, CannotSendRequest,
-				# ImproperConnectionState, IncompleteRead, UnimplementedFileMode, UnknownTransferEncoding,
-				# UnknownProtocol, InvalidURL, NotConnected
-				#
-				# [Low] TODO: break down HTTPException to (^) those.
+				# If we reach this point we can assume the request was successful (2xx)
 
-				self.messages.raise_error(self.messages.REQUEST_FAILED % {
+				last_modified = parsedate(self.request.current_headers["last-modified"])
+	
+			except KeyError:
+
+				last_modified = None
+
+				# The server didn't specified a last-modified header for the resource...
+
+				self.messages.issue_warning(self.messages.HTTP_HEADER_MISSING % {
+					"header" : "last-modified",
 					"url" : url
 				})
 
+			if not last_modified:
+
+				# ... no problem! we use the local time as last-modified and add 24 hours to force the visit
+
+				last_modified = localtime(time() + (24 * 60 * 60))
+
+			try:
+
+				# We transform the 9-tuple date into a UNIX timestamp
+
+				last_modified = mktime(last_modified) + (24 * 60 * 60)
+
+			except OverflowError:
+
+				# Somehow localtime() or the server returned an invalid date
+				# This is very rare but it can happen
+
+				self.messages.raise_error(self.messages.OVERFLOW_ERROR % {
+					"expression" : "mktime(" + repr(last_modified) + ")"
+				}, self.messages.INTERNAL)
+
 				return False
 
-			except gaierror:
+			except ValueError:
 
-				# Failed DNS server lookup, connection problems, low level stuff.
+				# Same as the former
 
-				self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
-					"url" : url
-				})
+				self.messages.raise_error(self.messages.VALUE_ERROR % {
+					"expression" : "mktime(" + repr(last_modified) + ")"
+				}, self.messages.INTERNAL)
 
 				return False
 
-			# XPath querying begins here (A.K.A "the interesting part")
+			if last_modified > float(last_update):
 
-			# xpath_main_context = whole XHTML document. This is for those queries that doesn't have any context defined
+				#URL needs to be updated
 
-			xpath_main_context = minidom.parseString(self.request.current_xhtml)
+				try:
 
-			for xpath_query in self.config["xpath_queries"][host]:
+					# We make the GET request
 
-				if not xpath_query["context"]:
+					self.request.make(url, self.request.GET, self.config["user_agent"], self.config["charset"])
 
-					xpath_result = xpath.find(xpath_query["query"], xpath_main_context)
+				except ResponseCodeError as response_code:
 
-					for result in xpath_result:
+					# We got an error response code (3xx, 4xx, 5xx). We skip the URL and return the response code
 
-						xpath_query["result"].append(result)
+					response_code = int(str(response_code))
 
-				else:
+					self.messages.issue_warning(self.messages.RESPONSE_CODE_ERROR % {
+						"url" : url,
+						"code" : response_code,
+						"explanation" : BaseHTTPRequestHandler.responses[response_code][1]
+					})
 
-					for query in self.config["xpath_queries"][host]:
+					return response_code
 
-						if query['name'] == xpath_query["context"]:
+				except HTTPException:
 
-							xpath_context = query['result']
+					# There was a problem while trying to connect to 'url'
+					#
+					# Possible errors are: BadStatusLine, ResponseNotReady, CannotSendHeader, CannotSendRequest,
+					# ImproperConnectionState, IncompleteRead, UnimplementedFileMode, UnknownTransferEncoding,
+					# UnknownProtocol, InvalidURL, NotConnected
+					#
+					# [Low] TODO: break down HTTPException to (^) those.
 
-							break
+					self.messages.raise_error(self.messages.REQUEST_FAILED % {
+						"url" : url
+					})
 
-					for context in xpath_context:
+					return False
 
-						node = minidom.parseString(context.toxml(self.config["charset"]))
+				except gaierror:
 
-						if xpath_query["get_value"]:
+					# Failed DNS server lookup, connection problems, low level stuff.
 
-							xpath_result = xpath.findvalue(xpath_query["query"], node)
+					self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
+						"url" : url
+					})
 
-							xpath_query["result"].append(xpath_result)
+					return False
 
-						else:
+				# XPath querying begins here (A.K.A "the interesting part")
 
-							xpath_result = xpath.find(xpath_query["query"], node)
+				# xpath_main_context = whole XHTML document. This is for those queries that doesn't have any context defined
+
+				if self.request.current_content_type == "text/html":
+
+					xpath_main_context = minidom.parseString(self.request.current_content)
+
+					for xpath_query in self.config["xpath_queries"][host]:
+
+						if not xpath_query["context"]:
+
+							xpath_result = xpath.find(xpath_query["query"], xpath_main_context)
 
 							for result in xpath_result:
 
 								xpath_query["result"].append(result)
 
+						else:
 
-				vars(self)[xpath_query["name"]] = xpath_query["result"]
+							for query in self.config["xpath_queries"][host]:
 
-			# We need to clean the queries results in order to allow subsequent 'self.run' calls
-			# These results are already stored in their respective variables
+								if query['name'] == xpath_query["context"]:
 
-			for xpath_query in self.config["xpath_queries"][host]:
+									xpath_context = query['result']
 
-				xpath_query["result"] = []
+									break
 
-		else:
+							for context in xpath_context:
 
-			#URL is up-to-date, we issue a warning indicating this (so it can be logged) and skip the URL
+								node = minidom.parseString(context.toxml(self.config["charset"]))
 
-			self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
-				"url" : url
-			})
+								if xpath_query["get_value"]:
+
+									xpath_result = xpath.findvalue(xpath_query["query"], node)
+
+									xpath_query["result"].append(xpath_result)
+
+								else:
+
+									xpath_result = xpath.find(xpath_query["query"], node)
+
+									for result in xpath_result:
+
+										xpath_query["result"].append(result)
+
+
+						vars(self)[xpath_query["name"]] = xpath_query["result"]
+
+					# We need to clean the queries results in order to allow subsequent 'self.run' calls
+					# These results are already stored in their respective variables
+
+					for xpath_query in self.config["xpath_queries"][host]:
+
+						xpath_query["result"] = []
+
+			else:
+
+				#URL is up-to-date, we issue a warning indicating this (so it can be logged) and skip the URL
+
+				self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
+					"url" : url
+				})

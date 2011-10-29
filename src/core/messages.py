@@ -102,7 +102,7 @@ class Messages:
 
 	def __del__(self):
 
-		#TODO
+		# [Low] TODO
 
 		pass
 

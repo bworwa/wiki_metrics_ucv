@@ -7,33 +7,10 @@ from urlparse import parse_qs
 
 from core.scraper import Scraper
 
-"""Example of a multi-page history traverse"""
-
-host = "http://en.wikipedia.org"
-rest = "/w/index.php?title=Du%C8%99mani&action=history&limit=4"
+url = "http://en.wikipedia.org/w/index.php?title=Vaf%C3%BEr%C3%BA%C3%B0nir&action=history"
 
 scraper = Scraper()
 
-while True:
+scraper.run(url, 0)
 
-
-	scraper.run(host + rest, "1319302255")
-
-	for i in range(len(scraper.revision)):
-
-		print scraper.mediawiki_id[i].nodeValue
-		print scraper.date[i]
-		print scraper.user[i]
-		print scraper.minor[i]
-		print scraper.size[i]
-		print scraper.comment[i]
-
-	try:
-
-		rest = scraper.next_page[0].nodeValue
-
-	except IndexError:
-
-		print "Done"
-
-		break
+print "Done"
