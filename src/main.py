@@ -7,10 +7,8 @@ from urlparse import parse_qs
 
 from core.scraper import Scraper
 
-url = "http://en.wikipedia.org/w/index.php?title=Vaf%C3%BEr%C3%BA%C3%B0nir&action=history"
+url = "http://en.wikipedia.org/w/index.php?title=Du%C8%99mani&action=history&limit=4"
 
 scraper = Scraper()
 
-scraper.run(url, 0)
-
-print "Done"
+print scraper.run(url)

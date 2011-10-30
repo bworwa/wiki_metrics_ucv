@@ -1,8 +1,19 @@
-Dependencies so far:
-
-	py-dom-xpath: sudo easy_install py-dom-xpath (http://py-dom-xpath.googlecode.com/svn/trunk/doc/index.html)
-	uTidyLib: sudo apt-get install python-utidylib (http://utidylib.berlios.de/)
-
-Requirements so far:
-
-	Python 2.7.2+
+<h2>Dependencies so far:</h2>
+<ul>
+<li><strong>py-dom-xpath</strong>
+<ul>
+<li>sudo easy_install py-dom-xpath</li>
+<li><a href="http://py-dom-xpath.googlecode.com/svn/trunk/doc/index.html" target="_blank">Official site</a></li>
+</ul>
+</li>
+<li><strong>uTidyLib</strong>
+<ul>
+<li>sudo apt-get install python-utidylib</li>
+<li><a href="http://utidylib.berlios.de/" target="_blank">Official site</a></li>
+</ul>
+</li>
+</ul>
+<h2>Requirements so far:</h2>
+<ul>
+<li>Python 2.4+ (tested on 2.7.2+)</li>
+</ul>

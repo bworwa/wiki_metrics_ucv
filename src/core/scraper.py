@@ -6,7 +6,7 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from urlparse import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler
-from rfc822 import parsedate
+from email.utils import parsedate
 from time import time, localtime, mktime
 from socket import gaierror
 from httplib import HTTPException
@@ -25,7 +25,18 @@ class Scraper:
 		"path_to_config" : "../config/scraper.xml",
 		"xpath_queries" : {},
 		"user_agent" : None,
-		"charset" : "UTF8"
+		"charset" : "UTF8",
+		"xml_mime_types" : [
+			"text/html",
+			"text/xml",
+			"application/xhtml+xml",
+			"application/atom+xml",
+			"application/xslt+xml",
+			"application/mathml+xml",
+			"application/xml",
+			"application/rss+xml",
+			"image/svg+xml"
+		]
 	}
 
 	messages = Messages()
@@ -366,18 +377,23 @@ class Scraper:
 
 		pass
 
-	def run(self, url, last_update):
+	def run(self, url, last_update = 0):
 
 		"""
 		Given an URL and a 'last update' timestamp, it applies the corresponding XPath queries to the resource content
 		(assuming we're talking about a (X)HTML resource) and creates a custom set of variables named after the queries
 		In the XML configuration file. These custom set of variables will hold the XPath queries results
 
+		This will only be done if and only if the 'last-modified' header of the resource is greater than the 'last_update'
+		Parameter. If no 'last_update' is specified then it is defaulted to 0, forcing the visit.
+
 		Returns the HTTP response code of the request or False if an error occurs
 		"""
 
 		# At this point 'url' must be a valid URL
 		# However we revalidate it as this class is solution independent
+
+		# [Medium] TODO: consider HTTP(S) only
 
 		if not self.validation.validate_url(url):
 
@@ -461,7 +477,7 @@ class Scraper:
 
 			return False
 
-		if self.request.current_content_type == "text/html":
+		if self.request.current_content_type in self.config["xml_mime_types"]:
 
 			try:
 
@@ -523,7 +539,13 @@ class Scraper:
 
 					# We make the GET request
 
-					self.request.make(url, self.request.GET, self.config["user_agent"], self.config["charset"])
+					self.request.make(
+						url,
+						self.request.GET,
+						self.config["user_agent"],
+						self.config["charset"],
+						self.config["xml_mime_types"]
+					)
 
 				except ResponseCodeError as response_code:
 
@@ -569,7 +591,7 @@ class Scraper:
 
 				# xpath_main_context = whole XHTML document. This is for those queries that doesn't have any context defined
 
-				if self.request.current_content_type == "text/html":
+				if self.request.current_content_type in self.config["xml_mime_types"]:
 
 					xpath_main_context = minidom.parseString(self.request.current_content)
 
@@ -621,10 +643,30 @@ class Scraper:
 
 						xpath_query["result"] = []
 
+				else:
+
+					# The resource is not an (X)HTML resource, we issue a warning and skip the URL
+
+					self.messages.issue_warning(self.messages.MIME_TYPE_NOT_SUPPORTED % {
+						"url" : url,
+						"mime-type" : self.request.current_content_type
+					})
+
 			else:
 
-				#URL is up-to-date, we issue a warning indicating this (so it can be logged) and skip the URL
+				# URL is up-to-date, we issue a warning indicating this (so it can be logged) and skip the URL
 
 				self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
 					"url" : url
 				})
+
+		else:
+
+			# The resource is not an (X)HTML resource, we issue a warning and skip the URL
+
+			self.messages.issue_warning(self.messages.MIME_TYPE_NOT_SUPPORTED % {
+				"url" : url,
+				"mime-type" : self.request.current_content_type
+			})
+
+		return self.request.current_response_code

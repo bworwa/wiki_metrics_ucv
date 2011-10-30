@@ -31,7 +31,7 @@ class Request:
 
 	current_response_code = 0
 
-	current_content = None
+	current_content = "<empty></empty>"
 
 	current_content_type = None
 
@@ -57,19 +57,20 @@ class Request:
 
 		self.current_response_code = 0
 
-		self.current_content = None
+		current_content = "<empty></empty>"
 
 		self.current_content_type = None
 
 		self.current_charset = None
 
-	def make(self, url, request_type, user_agent = None, charset = None):
+	def make(self, url, request_type, user_agent = None, charset = None, xml_mime_types = []):
 
 		"""
 		Makes a request to 'url' of the type 'request_type' (Supported types are 'HEAD' and 'GET')
 
 		Default user agent is None (some hosts do require a user agent in their requests)
-		Default charset is None as it isn't needed for HEAD requests. However, it is STRICTLY necessary for GET requests
+		Default charset is None as it isn't required for HEAD requests. However, it is STRICTLY necessary for GET requests
+		Default xml_mime_types is [] as it isn't required for HEAD requests. However, it is STRICTLY necessary for GET requests
 		"""
 
 		# We clean up all our variables before making another request
@@ -85,13 +86,17 @@ class Request:
 
 		path = parsed_url[2]
 
+		path_parameters = parsed_url[3]
+
 		query_string = parsed_url[4]
+
+		if path_parameters:
+
+			path_parameters = ";" + path_parameters
 
 		if query_string:
 			query_string = "?" + query_string
 			
-		# [Low] TODO: check params [3]
-
 		# We create our HTTP connection instance (no request sent yet)
 
 		connection = HTTPConnection(host, 80, False, 30)
@@ -100,7 +105,7 @@ class Request:
 
 		connection.request(
 			request_type,
-			path + query_string,
+			path + path_parameters + query_string,
 			None,
 			{ "User-Agent" : user_agent }
 		)
@@ -140,11 +145,26 @@ class Request:
 
 		except KeyError:
 
-			# [Low] TODO
+			# [Medium] TODO
 
 			pass
 
-		if request_type == self.GET and self.current_content_type == "text/html":
+		if request_type == self.GET and self.current_content_type in xml_mime_types:
+
+			# We get the content of the resource and strip it
+
+			self.current_content = response.read().strip()
+
+			# We set the Tidy options
+
+			tidy_options = {
+				"output_xhtml" : True,
+				"add_xml_decl" : True,
+				"bare" : True,
+				"drop_empty_paras" : True,
+				"hide_comments" : True,
+				"join_classes" : True
+			}
 
 			try:
 
@@ -165,11 +185,11 @@ class Request:
 
 				self.current_charset = charset
 
-			# We get the content of the resource and strip it
+				# [Medium] TODO: normalize charsets
 
-			self.current_content = response.read().strip()
+			if charset:
 
-			if self.current_content:
+				tidy_options["char_encoding"] = charset
 
 				if not self.current_charset == charset:
 
@@ -179,19 +199,9 @@ class Request:
 
 					self.current_content = unicode(self.current_content.decode(self.current_charset)).encode(charset)
 
-				tidy_options = {
-					"output_xhtml" : True,
-					"add_xml_decl" : True,
-					"bare" : True,
-					"drop_empty_paras" : True,
-					"hide_comments" : True,
-					"join_classes" : True,
-					"char_encoding" : charset
-				}
+			# Finally we tidy up the XHTML and it's ready to be parsed
 
-				# Finally we tidy up the XHTML and it's ready to be parsed
-
-				self.current_content = parseString(self.current_content, **tidy_options).__str__()		
+			self.current_content = parseString(self.current_content, **tidy_options).__str__()		
 
 		# We close the connection and end the execution
 
