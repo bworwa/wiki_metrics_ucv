@@ -24,19 +24,7 @@ class Scraper:
 	config = {
 		"path_to_config" : "../config/scraper.xml",
 		"xpath_queries" : {},
-		"user_agent" : None,
-		"charset" : "UTF8",
-		"xml_mime_types" : [
-			"text/html",
-			"text/xml",
-			"application/xhtml+xml",
-			"application/atom+xml",
-			"application/xslt+xml",
-			"application/mathml+xml",
-			"application/xml",
-			"application/rss+xml",
-			"image/svg+xml"
-		]
+		"user_agent" : None
 	}
 
 	messages = Messages()
@@ -477,7 +465,7 @@ class Scraper:
 
 			return False
 
-		if self.request.current_content_type in self.config["xml_mime_types"]:
+		if self.request.current_content_type in self.request.XML_MIME_TYPES:
 
 			try:
 
@@ -539,13 +527,7 @@ class Scraper:
 
 					# We make the GET request
 
-					self.request.make(
-						url,
-						self.request.GET,
-						self.config["user_agent"],
-						self.config["charset"],
-						self.config["xml_mime_types"]
-					)
+					self.request.make(url, self.request.GET, self.config["user_agent"])
 
 				except ResponseCodeError as response_code:
 
@@ -591,7 +573,7 @@ class Scraper:
 
 				# xpath_main_context = whole XHTML document. This is for those queries that doesn't have any context defined
 
-				if self.request.current_content_type in self.config["xml_mime_types"]:
+				if self.request.current_content_type in self.request.XML_MIME_TYPES:
 
 					xpath_main_context = minidom.parseString(self.request.current_content)
 
@@ -617,7 +599,7 @@ class Scraper:
 
 							for context in xpath_context:
 
-								node = minidom.parseString(context.toxml(self.config["charset"]))
+								node = minidom.parseString(context.toxml(self.request.CHARSET))
 
 								if xpath_query["get_value"]:
 

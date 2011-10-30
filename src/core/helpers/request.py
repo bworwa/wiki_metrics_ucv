@@ -27,6 +27,30 @@ class Request:
 	HEAD = "HEAD"
 	GET = "GET"
 
+	CHARSET = "UTF8"
+
+	XML_MIME_TYPES = [
+		"text/html",
+		"text/xml",
+		"application/xhtml+xml",
+		"application/atom+xml",
+		"application/xslt+xml",
+		"application/mathml+xml",
+		"application/xml",
+		"application/rss+xml",
+		"image/svg+xml"
+	]
+
+	TIDY_OPTIONS = {
+		"output_xhtml" : True,
+		"add_xml_decl" : True,
+		"bare" : True,
+		"drop_empty_paras" : True,
+		"hide_comments" : True,
+		"join_classes" : True,
+		"char_encoding" : CHARSET
+	}
+
 	current_headers = {}
 
 	current_response_code = 0
@@ -57,20 +81,18 @@ class Request:
 
 		self.current_response_code = 0
 
-		current_content = "<empty></empty>"
+		self.current_content = "<empty></empty>"
 
 		self.current_content_type = None
 
 		self.current_charset = None
 
-	def make(self, url, request_type, user_agent = None, charset = None, xml_mime_types = []):
+	def make(self, url, request_type, user_agent = None):
 
 		"""
 		Makes a request to 'url' of the type 'request_type' (Supported types are 'HEAD' and 'GET')
 
 		Default user agent is None (some hosts do require a user agent in their requests)
-		Default charset is None as it isn't required for HEAD requests. However, it is STRICTLY necessary for GET requests
-		Default xml_mime_types is [] as it isn't required for HEAD requests. However, it is STRICTLY necessary for GET requests
 		"""
 
 		# We clean up all our variables before making another request
@@ -149,22 +171,11 @@ class Request:
 
 			pass
 
-		if request_type == self.GET and self.current_content_type in xml_mime_types:
+		if request_type == self.GET and self.current_content_type in self.XML_MIME_TYPES:
 
 			# We get the content of the resource and strip it
 
 			self.current_content = response.read().strip()
-
-			# We set the Tidy options
-
-			tidy_options = {
-				"output_xhtml" : True,
-				"add_xml_decl" : True,
-				"bare" : True,
-				"drop_empty_paras" : True,
-				"hide_comments" : True,
-				"join_classes" : True
-			}
 
 			try:
 
@@ -183,25 +194,21 @@ class Request:
 				# There was no 'charset' defined in the 'content-type' header, we default to the specified 'charset'.
 				# This could, and probably will, cause problems
 
-				self.current_charset = charset
+				self.current_charset = self.CHARSET
 
 				# [Medium] TODO: normalize charsets
 
-			if charset:
+			if not self.current_charset == self.CHARSET:
 
-				tidy_options["char_encoding"] = charset
+				# Now we step into marshland and begin the cumbersome task of character encoding
 
-				if not self.current_charset == charset:
+				# [High] TODO: try, try, try...
 
-					# Now we step into marshland and begin the cumbersome task of character encoding
-
-					# [High] TODO: try, try, try...
-
-					self.current_content = unicode(self.current_content.decode(self.current_charset)).encode(charset)
+				self.current_content = unicode(self.current_content.decode(self.current_charset)).encode(self.CHARSET)
 
 			# Finally we tidy up the XHTML and it's ready to be parsed
 
-			self.current_content = parseString(self.current_content, **tidy_options).__str__()		
+			self.current_content = parseString(self.current_content, **self.TIDY_OPTIONS).__str__()		
 
 		# We close the connection and end the execution
 
