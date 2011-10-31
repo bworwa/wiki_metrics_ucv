@@ -27,8 +27,6 @@ class Request:
 	HEAD = "HEAD"
 	GET = "GET"
 
-	CHARSET = "UTF8"
-
 	XML_MIME_TYPES = [
 		"text/html",
 		"text/xml",
@@ -47,8 +45,7 @@ class Request:
 		"bare" : True,
 		"drop_empty_paras" : True,
 		"hide_comments" : True,
-		"join_classes" : True,
-		"char_encoding" : CHARSET
+		"join_classes" : True
 	}
 
 	current_headers = {}
@@ -87,12 +84,16 @@ class Request:
 
 		self.current_charset = None
 
-	def make(self, url, request_type, user_agent = None):
+	def make(self, url, request_type, user_agent, desired_charset):
 
 		"""
-		Makes a request to 'url' of the type 'request_type' (Supported types are 'HEAD' and 'GET')
+		Makes a request for the resource identified by 'url' of the type 'request_type' (supported types are 'HEAD' and 'GET')
+		using the user agent 'user_agent'
 
-		Default user agent is None (some hosts do require a user agent in their requests)
+		If the resource's content is (X)HTML/XML, it'll then be encoded to the desired charset ('desired_charset')
+		(this only in case that the resource's current charset is different from the desired_charset)
+
+		Note: The (X)HTML obtained will be tidied so 'self.current_content' might not be an exact copy of the resource's content
 		"""
 
 		# We clean up all our variables before making another request
@@ -155,7 +156,7 @@ class Request:
 
 			# We try to get the 'content-type' header in order to know the MIME-type of the resource
 
-			content_type_header = self.current_headers["content-type"].split(";")
+			content_type_header = self.current_headers["content-type"].lower().split(";")
 
 			content_type_header = list(
 				fragment.strip() for fragment in content_type_header
@@ -163,7 +164,7 @@ class Request:
 
 			# We get the content type
 
-			self.current_content_type = content_type_header[0].lower()
+			self.current_content_type = content_type_header[0]
 
 		except KeyError:
 
@@ -187,24 +188,22 @@ class Request:
 
 					self.current_charset = self.current_charset.replace(substring, "")
 
-				self.current_charset = self.current_charset.upper()
-
 			except IndexError:
 
-				# There was no 'charset' defined in the 'content-type' header, we default to the specified 'charset'.
+				# There was no 'charset' defined in the 'content-type' header, we default to the specified 'desired_charset'.
 				# This could, and probably will, cause problems
 
-				self.current_charset = self.CHARSET
+				self.current_charset = desired_charset
 
-				# [Medium] TODO: normalize charsets
-
-			if not self.current_charset == self.CHARSET:
+			if not self.current_charset == desired_charset:
 
 				# Now we step into marshland and begin the cumbersome task of character encoding
 
 				# [High] TODO: try, try, try...
 
-				self.current_content = unicode(self.current_content.decode(self.current_charset)).encode(self.CHARSET)
+				self.current_content = unicode(self.current_content.decode(self.current_charset)).encode(desired_charset)
+
+			self.TIDY_OPTIONS["char_encoding"] = desired_charset
 
 			# Finally we tidy up the XHTML and it's ready to be parsed
 

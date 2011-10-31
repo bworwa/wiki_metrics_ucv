@@ -24,7 +24,8 @@ class Scraper:
 	config = {
 		"path_to_config" : "../config/scraper.xml",
 		"xpath_queries" : {},
-		"user_agent" : None
+		"user_agent" : None,
+		"charset" : None
 	}
 
 	messages = Messages()
@@ -90,11 +91,13 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		# We get the 'user_agent' tag from the general node
+		# We get the 'user_agent' and 'charset' tag from the general node
 
 		user_agent = general.getElementsByTagName("user_agent")
+
+		charset = general.getElementsByTagName("charset")
 			
-		# And we 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
+		# We 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
 
 		try:
 
@@ -121,6 +124,34 @@ class Scraper:
 			}, self.messages.INTERNAL)
 
 		self.config["user_agent"] = user_agent[0].firstChild.nodeValue.strip()
+
+		# We 'poke' the variable charset[0] to see if there is a 'charset' tag defined in the XML configuration file
+
+		try:
+
+			charset[0]
+
+		except IndexError:
+
+			# The tag 'charset' is missing, program halted
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "charset",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		# We verify that the 'charset' tag content exists and is not an empty (whitespace) string
+
+		if not charset[0].firstChild or not charset[0].firstChild.nodeValue.strip():
+
+			# 'charset' tag content doesn't exists (empty) or is an empty string (whitespace), program halted
+
+			self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
+				"xml_tag_name" : "charset",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		self.config["charset"] = charset[0].firstChild.nodeValue.replace("-", "", 1).strip().lower()
 
 		# We try to get the 'xpath' node from the root node
 
@@ -424,7 +455,12 @@ class Scraper:
 
 			# We make the HEAD request
 
-			self.request.make(url, self.request.HEAD, self.config["user_agent"])
+			self.request.make(
+				url,
+				self.request.HEAD,
+				self.config["user_agent"],
+				self.config["charset"]
+			)
 
 		except ResponseCodeError as response_code:
 
@@ -527,7 +563,12 @@ class Scraper:
 
 					# We make the GET request
 
-					self.request.make(url, self.request.GET, self.config["user_agent"])
+					self.request.make(
+						url,
+						self.request.GET,
+						self.config["user_agent"],
+						self.config["charset"]
+					)
 
 				except ResponseCodeError as response_code:
 
@@ -599,7 +640,7 @@ class Scraper:
 
 							for context in xpath_context:
 
-								node = minidom.parseString(context.toxml(self.request.CHARSET))
+								node = minidom.parseString(context.toxml(self.config["charset"]))
 
 								if xpath_query["get_value"]:
 

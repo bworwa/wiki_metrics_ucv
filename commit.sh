@@ -12,9 +12,9 @@ find . -name "*.pyc" -exec rm -f '{}' +
 
 rm -r logs
 
-# Then that pesky README.html~ file
+# Then that pesky README.md~ file
 
-rm README.html~
+rm README.md~
 
 # And then we proceed to commit
 
