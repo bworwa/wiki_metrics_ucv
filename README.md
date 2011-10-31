@@ -6,6 +6,7 @@ Dependencies so far:
     * [Documentation](http://py-dom-xpath.googlecode.com/svn/trunk/doc/index.html "py-dom-xpath documentation")
 
     `sudo apt-get install python-setuptools`
+
     `sudo easy_install py-dom-xpath`
 
 * uTidyLib
