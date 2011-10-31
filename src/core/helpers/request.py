@@ -93,7 +93,7 @@ class Request:
 		If the resource's content is (X)HTML/XML, it'll then be encoded to the desired charset ('desired_charset')
 		(this only in case that the resource's current charset is different from the desired_charset)
 
-		Note: The (X)HTML obtained will be tidied so 'self.current_content' might not be an exact copy of the resource's content
+		Note: The (X)HTML/XML obtained will be tidied so 'self.current_content' might not be an exact copy of the resource's content
 		"""
 
 		# We clean up all our variables before making another request
@@ -168,7 +168,7 @@ class Request:
 
 		except KeyError:
 
-			# [Medium] TODO
+			# [Low] TODO
 
 			pass
 
@@ -197,15 +197,13 @@ class Request:
 
 			if not self.current_charset == desired_charset:
 
-				# Now we step into marshland and begin the cumbersome task of character encoding
-
-				# [High] TODO: try, try, try...
-
-				self.current_content = unicode(self.current_content.decode(self.current_charset)).encode(desired_charset)
+				self.current_content = unicode(
+					self.current_content.decode(self.current_charset, "replace")
+				).encode(desired_charset, "ignore")
 
 			self.TIDY_OPTIONS["char_encoding"] = desired_charset
 
-			# Finally we tidy up the XHTML and it's ready to be parsed
+			# Finally we tidy up the (X)HTML/XML and it's ready to be parsed
 
 			self.current_content = parseString(self.current_content, **self.TIDY_OPTIONS).__str__()		
 

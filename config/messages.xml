@@ -22,10 +22,11 @@
 	<message name="http_header_missing">HTTP header '%(header)s' is missing for URL '%(url)s'</message>
 	<message name="url_not_modified">URL '%(url)s' has not been modified since last update. This URL will be ignored</message>
 	<message name="connection_problem">A connection problem has been encountered, URL '%(url)s' has been ignored</message>
-	<message name="invalid_url">URL '%(url)s' is not a valid URL and will be ignored</message>
+	<message name="invalid_url">URL '%(url)s' is not a valid HTTP/HTTPS/SHTTP URL and will be ignored</message>
 	<message name="get_no_charset">A GET request was made for the following URL '%(url)s' but no charset was specified</message>
 	<message name="request_failed">The request for the following URL '%(url)s' has failed. This URL will be ignored</message>
 	<message name="mime_type_not_supported">URL '%(url)s' returned a non supported resource ('%(mime-type)s')</message>
+	<message name="charset_not_supported">Charset '%(charset)s' is not currently supported. Supported charsets are %(supported_charsets)s</message>
 	<message name="overflow_error">'%(expression)s' caused an overflow error</message>
 	<message name="value_error">'%(expression)s' caused a value error</message>
 </messages>

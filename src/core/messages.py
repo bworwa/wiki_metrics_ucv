@@ -6,8 +6,9 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from sys import exit, stderr
 from string import whitespace
+from os.path import abspath, dirname
 
-#User defined
+# User defined
 from helpers.validation import Validation
 from helpers.log import Log
 
@@ -30,7 +31,7 @@ class Messages:
 	SCRAPER = "scraper"
 
 	config = {
-		"path_to_config" : "../config/messages.xml"
+		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/messages.xml"
 	}
 
 	log = Log()

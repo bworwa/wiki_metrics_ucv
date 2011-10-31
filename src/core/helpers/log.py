@@ -3,13 +3,12 @@
 
 # Native
 from datetime import date, datetime
-from os import path, makedirs
+from os.path import dirname, abspath, exists
+from os import makedirs
 
 class Log:
 
-	#This should be configurable
-
-	BASE_PATH_TO_LOG = "../logs"
+	BASE_PATH_TO_LOG = dirname(dirname(dirname(dirname(abspath(__file__))))) + "/logs"
 
 	current_path_to_log = None
 
@@ -34,7 +33,7 @@ class Log:
 
 		self.current_path_to_log = self.BASE_PATH_TO_LOG + "/" + section
 
-		if not path.exists(self.current_path_to_log):
+		if not exists(self.current_path_to_log):
 
 			makedirs(self.current_path_to_log)
 

@@ -38,7 +38,9 @@ class Validation:
 
 		parsed_url = urlparse(url)
 
-		if parsed_url[0] and parsed_url[1]:
+		if parsed_url[0] and (
+			parsed_url[0] == "http" or parsed_url[0] == "https" or parsed_url[0] == "shttp"
+		) and parsed_url[1]:
 
 			# That's enough to be considered a valid URL
 

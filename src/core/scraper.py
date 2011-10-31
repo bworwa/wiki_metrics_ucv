@@ -10,6 +10,7 @@ from email.utils import parsedate
 from time import time, localtime, mktime
 from socket import gaierror
 from httplib import HTTPException
+from os.path import abspath, dirname
 
 # User defined
 from messages import Messages
@@ -22,9 +23,16 @@ import xpath
 class Scraper:
 
 	config = {
-		"path_to_config" : "../config/scraper.xml",
+		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/scraper.xml",
 		"xpath_queries" : {},
 		"user_agent" : None,
+		"supported_charsets" : [
+			"utf8",
+			"latin1",
+			"ascii",
+			"ibm858",
+			"shiftjis"
+		],
 		"charset" : None
 	}
 
@@ -151,7 +159,16 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		self.config["charset"] = charset[0].firstChild.nodeValue.replace("-", "", 1).strip().lower()
+		self.config["charset"] = charset[0].firstChild.nodeValue.replace("-", "").strip().lower()
+
+		if not self.config["charset"] in self.config["supported_charsets"]:
+
+			# The specified charset is not currently supported
+
+			self.messages.raise_error(self.messages.CHARSET_NOT_SUPPORTED % {
+				"charset" : self.config["charset"],
+				"supported_charsets" : repr(self.config["supported_charsets"])
+			}, self.messages.INTERNAL)
 
 		# We try to get the 'xpath' node from the root node
 
@@ -412,8 +429,6 @@ class Scraper:
 		# At this point 'url' must be a valid URL
 		# However we revalidate it as this class is solution independent
 
-		# [Medium] TODO: consider HTTP(S) only
-
 		if not self.validation.validate_url(url):
 
 			# The URL is invalid. There's nothing to do, we skip the URL and move on to the next
@@ -426,7 +441,7 @@ class Scraper:
 
 		# We get the host out of the URL
 
-		host = urlparse(url)[1]
+		host = urlparse(url.strip().lower())[1]
 
 		try:
 
@@ -612,7 +627,7 @@ class Scraper:
 
 				# XPath querying begins here (A.K.A "the interesting part")
 
-				# xpath_main_context = whole XHTML document. This is for those queries that doesn't have any context defined
+				# xpath_main_context = whole (X)HTML/XML document. This is for those queries that doesn't have any context defined
 
 				if self.request.current_content_type in self.request.XML_MIME_TYPES:
 
