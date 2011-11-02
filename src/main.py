@@ -3,7 +3,7 @@
 
 from core.scraper import Scraper
 
-url = "http://es.wikipedia.org/w/index.php?title=Wikipedia:Portada&action=history"
+url = "http://en.wikipedia.org/w/index.php?title=Main_Page&action=history"
 
 scraper = Scraper()
 
