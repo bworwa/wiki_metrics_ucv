@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <messages>
+
+	<!-- Configuration -->
 	<message name="xml_config_io_error">There was a problem while opening/reading the XML configuration file '%(path_to_xml)s'</message>
 	<message name="generic_file_io_error">There was a problem while opening/reading the file '%(path_to_file)s'</message>
 	<message name="cannot_create_directory">There was a problem while creating the directory '%(directory)s'</message>
 	<message name="invalid_xml_file">'%(path_to_xml)s' is an invalid XML file</message>
 	<message name="xml_tag_missing">'%(xml_tag_name)s' tag is missing in the XML configuration file '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_attr">The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'</message>
+	<message name="invalid_attr_value">'%(attr_value)s' is not a valid value for attribute '%(attr)s' in '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_value">The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'</message>
 	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')</message>
+	<!-- Configuration -->
+
+	<!-- XPath -->
 	<message name="xpath_duplicated_query">Duplicated query '%(xpath_query_name)s' in '%(path_to_xml)s'</message>
 	<message name="xpath_context_not_defined">Query context '%(xpath_query_context)s' is not defined in '%(path_to_xml)s'</message>
 	<message name="xpath_feature_not_implemented">Query '%(query)s' uses features currently not supported</message>
@@ -15,18 +21,31 @@
 	<message name="xpath_type_error">Query '%(query)s' contains a type error. E.g: 'string()/node()'</message>
 	<message name="xpath_unknown_function_error">Query '%(query)s' contains a function that has no binding in the expression context</message>
 	<message name="xpath_unknown_prefix_error">Query '%(query)s' contains a QName with a namespace prefix that has no corresponding namespace declaration in the expression context</message>
-	<message name="xpath_unknown_variable_error">Query '%(query)s' contains a variable that has no binding in the expression context</message>	
-	<message name="invalid_attr_value">'%(attr_value)s' is not a valid value for attribute '%(attr)s' in '%(path_to_xml)s'</message>
+	<message name="xpath_unknown_variable_error">Query '%(query)s' contains a variable that has no binding in the expression context</message>
+	<!-- XPath -->
+	
+	<!-- Scraper -->
 	<message name="host_not_defined">There are no XPath queries defined for host '%(host)s'. URL '%(url)s' will be ignored</message>
-	<message name="response_code_error">URL '%(url)s' said [%(code)d] %(explanation)s</message>
+	<message name="invalid_url">URL '%(url)s' is not a valid HTTP/HTTPS/SHTTP URL and will be ignored</message>
 	<message name="http_header_missing">HTTP header '%(header)s' is missing for URL '%(url)s'</message>
 	<message name="url_not_modified">URL '%(url)s' has not been modified since last update. This URL will be ignored</message>
-	<message name="connection_problem">A connection problem has been encountered, URL '%(url)s' has been ignored</message>
-	<message name="invalid_url">URL '%(url)s' is not a valid HTTP/HTTPS/SHTTP URL and will be ignored</message>
-	<message name="get_no_charset">A GET request was made for the following URL '%(url)s' but no charset was specified</message>
-	<message name="request_failed">The request for the following URL '%(url)s' has failed. This URL will be ignored</message>
+	<message name="response_code_error">URL '%(url)s' said [%(code)d] %(explanation)s</message>
 	<message name="mime_type_not_supported">URL '%(url)s' returned a non supported resource ('%(mime-type)s')</message>
 	<message name="charset_not_supported">Charset '%(charset)s' is not currently supported. Supported charsets are %(supported_charsets)s</message>
+	<!-- Xpath -->
+
+	<!-- Requests -->
+	<message name="dns_lookup_failed">Could not connect to '%(url)s' because the DNS lookup failed. This URL will be ignored</message>
+	<message name="not_connected">Could not send data to '%(host)s' because there was no connection established. URL '%(url)s' will be ignored</message>
+	<message name="unknown_protocol">URL '%(url)s' returned an unknown HTTP version. This URL will be ignored</message>
+	<message name="incomplete_read">There was a problem while reading the following URL '%(url)s' content. This URL will be ignored</message>
+	<message name="bad_status_line">URL '%(url)s' responded with an unknown HTTP response code. This URL will be ignored</message>
+	<message name="request_failed">The request for the following resource '%(url)s' has failed. This URL will be ignored</message>
+	<!-- Requests -->
+
+	<!-- Others -->
 	<message name="overflow_error">'%(expression)s' caused an overflow error</message>
 	<message name="value_error">'%(expression)s' caused a value error</message>
+	<!-- Others -->
+
 </messages>

@@ -128,12 +128,12 @@ class Request:
 
 		connection.request(
 			request_type,
-			path + path_parameters + query_string,
+			"/" + path + path_parameters + query_string,
 			None,
 			{ "User-Agent" : user_agent }
 		)
 
-		# We get the current (last) response from the server (response code, headers, etc.)
+		# We get the current response from the server (response code, headers, etc.)
 
 		response = connection.getresponse()
 
@@ -187,6 +187,10 @@ class Request:
 				for substring in ["charset=", "-"]:
 
 					self.current_charset = self.current_charset.replace(substring, "")
+
+				if self.current_charset == "iso88591":
+
+					self.current_charset = "latin1"
 
 			except IndexError:
 

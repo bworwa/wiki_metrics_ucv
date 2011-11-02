@@ -9,7 +9,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler
 from email.utils import parsedate
 from time import time, localtime, mktime
 from socket import gaierror
-from httplib import HTTPException
+from httplib import HTTPException, NotConnected, InvalidURL, UnknownProtocol, UnknownTransferEncoding, UnimplementedFileMode, IncompleteRead, ImproperConnectionState, BadStatusLine
 from os.path import abspath, dirname
 
 # User defined
@@ -28,10 +28,7 @@ class Scraper:
 		"user_agent" : None,
 		"supported_charsets" : [
 			"utf8",
-			"latin1",
-			"ascii",
-			"ibm858",
-			"shiftjis"
+			"ascii"
 		],
 		"charset" : None
 	}
@@ -417,7 +414,7 @@ class Scraper:
 
 		"""
 		Given an URL and a 'last update' timestamp, it applies the corresponding XPath queries to the resource content
-		(assuming we're talking about a (X)HTML resource) and creates a custom set of variables named after the queries
+		(assuming we're talking about a (X)HTML/XML resource) and creates a custom set of variables named after the queries
 		In the XML configuration file. These custom set of variables will hold the XPath queries results
 
 		This will only be done if and only if the 'last-modified' header of the resource is greater than the 'last_update'
@@ -491,14 +488,86 @@ class Scraper:
 
 			return response_code
 
+		except NotConnected:
+
+			# Socket was not open and failed to open a second time automatically
+
+			self.messages.raise_error(self.messages.NOT_CONNECTED % {
+					"host" : host,
+					"url" : url
+			})
+
+			return False
+
+		except InvalidURL:
+
+			# A port was given and was non-numeric or empty
+
+			self.messages.raise_error(self.messages.INVALID_URL % {
+				"url" : url
+			})
+
+			return False
+
+		except UnknownProtocol:
+
+			# We got a protocol that wasn't HTTP/0.9, HTTP/1.0 or HTTP/1.1
+
+			self.messages.raise_error(self.messages.UNKNOWN_PROTOCOL % {
+				"url" : url
+			})
+
+			return False
+
+		except UnknownTransferEncoding:
+
+			# Currently not raised in httplib
+
+			return False
+
+		except UnimplementedFileMode:
+
+			# Currently not raised in httplib
+
+			return False
+
+		except IncompleteRead:
+
+			# Either there was a synch problem or the socket was interrupted by a signal (resulting in a partial read)
+			# The content is corrupted and cannot be used
+
+			self.messages.raise_error(self.messages.INCOMPLETE_READ % {
+				"url" : url
+			})
+
+			return False
+
+		except ImproperConnectionState:
+
+			# Either 'CannotSendRequest', 'CannotSendHeader' or 'ResponseNotReady'
+			# Usually raised when doing multiple requests without reading responses between requests
+			# 'ResponseNotReady' is raised when the server don't send back any headers or the socket is
+			# closed/interrupted while trying to read them
+
+			self.messages.raise_error(self.messages.REQUEST_FAILED % {
+				"url" : url
+			})
+
+			return False
+
+		except BadStatusLine:
+
+			# The server responded with an unknown HTTP response code (< 100 || > 999)
+
+			self.messages.raise_error(self.messages.BAD_STATUS_LINE % {
+				"url" : url
+			})
+
+			return False
+
 		except HTTPException:
 
-			# There was a problem while trying to connect to 'url'
-			#
-			# Possible errors are: BadStatusLine, ResponseNotReady, CannotSendHeader, CannotSendRequest, ImproperConnectionState
-			# IncompleteRead, UnimplementedFileMode, UnknownTransferEncoding, UnknownProtocol, InvalidURL, NotConnected
-			#
-			# [Low] TODO: break down HTTPException to (^) those.
+			# Any other unknown exception is caught here
 
 			self.messages.raise_error(self.messages.REQUEST_FAILED % {
 				"url" : url
@@ -508,9 +577,9 @@ class Scraper:
 
 		except gaierror:
 
-			# Failed DNS server lookup, connection problems, low level stuff.
+			# Failed DNS server lookup, low level stuff.
 
-			self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
+			self.messages.issue_warning(self.messages.DNS_LOOKUP_FAILED % {
 				"url" : url
 			})
 
@@ -599,15 +668,86 @@ class Scraper:
 
 					return response_code
 
+				except NotConnected:
+
+					# Socket was not open and failed to open a second time automatically
+
+					self.messages.raise_error(self.messages.NOT_CONNECTED % {
+						"host" : host,
+						"url" : url
+					})
+
+					return False
+
+				except InvalidURL:
+
+					# A port was given and was non-numeric or empty
+
+					self.messages.raise_error(self.messages.INVALID_URL % {
+						"url" : url
+					})
+
+					return False
+
+				except UnknownProtocol:
+
+					# We got a protocol that wasn't HTTP/0.9, HTTP/1.0 or HTTP/1.1
+
+					self.messages.raise_error(self.messages.UNKNOWN_PROTOCOL % {
+						"url" : url
+					})
+
+					return False
+
+				except UnknownTransferEncoding:
+
+					# Currently not raised in httplib
+
+					return False
+
+				except UnimplementedFileMode:
+
+					# Currently not raised in httplib
+
+					return False
+
+				except IncompleteRead:
+
+					# Either there was a synch problem or the socket was interrupted by a signal (resulting in a partial read)
+					# The content is corrupted and cannot be used
+
+					self.messages.raise_error(self.messages.INCOMPLETE_READ % {
+						"url" : url
+					})
+
+					return False
+
+				except ImproperConnectionState:
+
+					# Either 'CannotSendRequest', 'CannotSendHeader' or 'ResponseNotReady'
+					# Usually raised when doing multiple requests without reading responses between requests
+					# 'ResponseNotReady' is raised when the server don't send back any headers or the socket is
+					# closed/interrupted while trying to read them
+
+					self.messages.raise_error(self.messages.REQUEST_FAILED % {
+						"url" : url
+					})
+
+					return False
+
+				except BadStatusLine:
+
+					# The server responded with an unknown HTTP response code (< 100 || > 999)
+
+					self.messages.raise_error(self.messages.BAD_STATUS_LINE % {
+						"url" : url
+					})
+
+					return False
+
 				except HTTPException:
 
-					# There was a problem while trying to connect to 'url'
-					#
-					# Possible errors are: BadStatusLine, ResponseNotReady, CannotSendHeader, CannotSendRequest,
-					# ImproperConnectionState, IncompleteRead, UnimplementedFileMode, UnknownTransferEncoding,
-					# UnknownProtocol, InvalidURL, NotConnected
-					#
-					# [Low] TODO: break down HTTPException to (^) those.
+					# Any other unknown exception is caught here
 
 					self.messages.raise_error(self.messages.REQUEST_FAILED % {
 						"url" : url
@@ -617,9 +757,9 @@ class Scraper:
 
 				except gaierror:
 
-					# Failed DNS server lookup, connection problems, low level stuff.
+					# Failed DNS server lookup, low level stuff.
 
-					self.messages.issue_warning(self.messages.CONNECTION_PROBLEM % {
+					self.messages.issue_warning(self.messages.DNS_LOOKUP_FAILED % {
 						"url" : url
 					})
 
@@ -683,7 +823,7 @@ class Scraper:
 
 				else:
 
-					# The resource is not an (X)HTML resource, we issue a warning and skip the URL
+					# The resource is not an (X)HTML/XML resource, we issue a warning and skip the URL
 
 					self.messages.issue_warning(self.messages.MIME_TYPE_NOT_SUPPORTED % {
 						"url" : url,
@@ -700,7 +840,7 @@ class Scraper:
 
 		else:
 
-			# The resource is not an (X)HTML resource, we issue a warning and skip the URL
+			# The resource is not an (X)HTML/XML resource, we issue a warning and skip the URL
 
 			self.messages.issue_warning(self.messages.MIME_TYPE_NOT_SUPPORTED % {
 				"url" : url,
