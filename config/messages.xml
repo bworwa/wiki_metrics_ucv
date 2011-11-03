@@ -27,6 +27,7 @@
 	<!-- Scraper -->
 	<message name="host_not_defined">There are no XPath queries defined for host '%(host)s'. URL '%(url)s' will be ignored</message>
 	<message name="invalid_url">URL '%(url)s' is not a valid HTTP/HTTPS/SHTTP URL and will be ignored</message>
+	<message name="robot_forbidden">Host '%(host)s' has blocked us from accesing '%(url)s' in his /robots.txt file</message>
 	<message name="http_header_missing">HTTP header '%(header)s' is missing for URL '%(url)s'</message>
 	<message name="url_not_modified">URL '%(url)s' has not been modified since last update. This URL will be ignored</message>
 	<message name="response_code_error">URL '%(url)s' said [%(code)d] %(explanation)s</message>

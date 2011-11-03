@@ -2,8 +2,10 @@
 """Core libraries, do not change"""
 
 # Native
-from httplib import HTTPConnection
+from httplib import HTTPConnection, HTTPException
 from urlparse import urlparse
+from robotparser import RobotFileParser
+from socket import gaierror
 
 # External
 from tidy import parseString
@@ -84,6 +86,59 @@ class Request:
 
 		self.current_charset = None
 
+	def knock(self, host, user_agent, url):
+
+		"""
+		Makes a request for '/robots.txt' and returns True if 'user_agent' can fetch 'url'. Returns False otherwise
+		If we get a HTTP response code other than '200' or any request error occurs, this function will return True
+		If we get a gaierror (DNS lookup error), this function will return False as everything else is doomed to fail
+		"""
+
+		robot = RobotFileParser()
+
+		try:
+
+			# Wetry to the resource /robots.txt
+
+			connection = HTTPConnection(host, 80, False, 1)
+
+			connection.request(
+				self.GET,
+				"/robots.txt",
+				None,
+				{ "User-Agent" : user_agent }
+			)
+
+			response = connection.getresponse()
+
+			if response.status == 200:
+
+				# If everthing went well, we feed the content of the resource to the parser
+
+				robot.parse(response.read().splitlines())
+
+				# And return if we have clearance to fetch the url
+
+				return robot.can_fetch(user_agent, url)
+
+			else:
+
+				# A 3xx, 4xx or 5xx error occurred. We just ignore /robots.txt and proceed
+
+				return True
+
+		except HTTPException:
+
+			# A request error occurred. We just ignore /robots.txt and proceed
+
+			return True
+
+		except gaierror:
+
+			# DNS lookup error, most probably everything else will fail. Let's just end it here
+
+			return False
+
 	def make(self, url, request_type, user_agent, desired_charset):
 
 		"""
@@ -105,6 +160,8 @@ class Request:
 
 		parsed_url = urlparse(url, None, False)
 
+		scheme = parsed_url[0]
+
 		host = parsed_url[1]
 
 		path = parsed_url[2]
@@ -118,6 +175,7 @@ class Request:
 			path_parameters = ";" + path_parameters
 
 		if query_string:
+
 			query_string = "?" + query_string
 			
 		# We create our HTTP connection instance (no request sent yet)
@@ -194,10 +252,10 @@ class Request:
 
 			except IndexError:
 
-				# There was no 'charset' defined in the 'content-type' header, we default to the specified 'desired_charset'.
-				# This could, and probably will, cause problems
+				# There was no 'charset' defined in the 'content-type' header, we default to the specified
+				# 'desired_charset'. This could, and probably will, cause problems
 
-				self.current_charset = desired_charset
+					self.current_charset = desired_charset
 
 			if not self.current_charset == desired_charset:
 

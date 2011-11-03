@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <scraper>
 	<general>
-		<user_agent>wiki_metrics_ucv/0.1</user_agent>
+		<!--
+			The user agent used to identify yourself while doing requests
+		-->
+		<user_agent>wiki_metrics_ucv/0.1 (https://github.com/bworwa/wiki_metrics_ucv)</user_agent>
 		<!--
 			It is highly recommended that you leave UTF-8 as 'charset' when dealing with (X)HTML/XML documents
 
@@ -10,6 +13,10 @@
 		<charset>utf8</charset>
 	</general>
 	<xpath>
+		<!--
+			Just an example on how to retrieve the date of the last update in wikipedia's main page history
+			(check src/main.py)
+		-->
 		<queries hosts="es.wikipedia.org, en.wikipedia.org">
 			<query name="history" context="none">/html/body/div[@id="content"]/div[@id="bodyContent"]/form[@id="mw-history-compare"]/ul[@id="pagehistory"]</query>
 			<query name="revision" context="history">/ul/li</query>
