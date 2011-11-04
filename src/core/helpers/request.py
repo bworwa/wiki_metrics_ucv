@@ -6,6 +6,7 @@ from httplib import HTTPConnection, HTTPException
 from urlparse import urlparse
 from robotparser import RobotFileParser
 from socket import gaierror
+from time import sleep
 
 # External
 from tidy import parseString
@@ -86,7 +87,7 @@ class Request:
 
 		self.current_charset = None
 
-	def knock(self, host, user_agent, url):
+	def knock(self, host, user_agent, url, time_to_sleep):
 
 		"""
 		Makes a request for '/robots.txt' and returns True if 'user_agent' can fetch 'url'. Returns False otherwise
@@ -96,9 +97,11 @@ class Request:
 
 		robot = RobotFileParser()
 
+		clearance = False
+
 		try:
 
-			# Wetry to the resource /robots.txt
+			# We try to get the resource /robots.txt
 
 			connection = HTTPConnection(host, 80, False, 1)
 
@@ -117,15 +120,21 @@ class Request:
 
 				robot.parse(response.read().splitlines())
 
-				# And return if we have clearance to fetch the url
+				# And resolve if we have clearance to fetch the url
 
-				return robot.can_fetch(user_agent, url)
+				clearance = robot.can_fetch(user_agent, url)
 
 			else:
 
 				# A 3xx, 4xx or 5xx error occurred. We just ignore /robots.txt and proceed
 
-				return True
+				clearance = True
+
+			connection.close()
+
+			sleep(time_to_sleep)
+
+			return clearance
 
 		except HTTPException:
 
@@ -139,7 +148,7 @@ class Request:
 
 			return False
 
-	def make(self, url, request_type, user_agent, desired_charset):
+	def make(self, url, request_type, user_agent, desired_charset, time_to_sleep):
 
 		"""
 		Makes a request for the resource identified by 'url' of the type 'request_type' (supported types are 'HEAD' and 'GET')
@@ -272,6 +281,8 @@ class Request:
 		# We close the connection and end the execution
 
 		connection.close()
+
+		sleep(time_to_sleep)
 
 	def verify_response_code(self, connection):
 

@@ -11,7 +11,6 @@ from time import time, localtime, mktime
 from socket import gaierror
 from httplib import HTTPException, NotConnected, InvalidURL, UnknownProtocol, UnknownTransferEncoding, UnimplementedFileMode, IncompleteRead, ImproperConnectionState, BadStatusLine
 from os.path import abspath, dirname
-from time import sleep
 
 # User defined
 from messages import Messages
@@ -464,7 +463,7 @@ class Scraper:
 
 		# We try to get '/robots.txt' to see if we have clearance to access the url
 
-		if not self.request.knock(host, self.config["user_agent"], url):
+		if not self.request.knock(host, self.config["user_agent"], url, self.config["time_between_requests"]):
 
 			# The host has explicitly specified that he doesn't want us to fetch this URL
 
@@ -481,8 +480,6 @@ class Scraper:
 		# Since the header 'last-modified' is optional, in case it doesn't exist for any given resource (assuming a 2xx response code)
 		# We must force the visit to that resource
 
-		sleep(self.config["time_between_requests"])
-
 		try:
 
 			# We make the HEAD request
@@ -491,7 +488,8 @@ class Scraper:
 				url,
 				self.request.HEAD,
 				self.config["user_agent"],
-				self.config["charset"]
+				self.config["charset"],
+				self.config["time_between_requests"]
 			)
 
 		except ResponseCodeError as response_code:
@@ -663,8 +661,6 @@ class Scraper:
 
 				#URL needs to be updated
 
-				sleep(self.config["time_between_requests"])
-
 				try:
 
 					# We make the GET request
@@ -673,7 +669,8 @@ class Scraper:
 						url,
 						self.request.GET,
 						self.config["user_agent"],
-						self.config["charset"]
+						self.config["charset"],
+						self.config["time_between_requests"]
 					)
 
 				except ResponseCodeError as response_code:
@@ -789,7 +786,8 @@ class Scraper:
 
 				# XPath querying begins here (A.K.A "the interesting part")
 
-				# xpath_main_context = whole (X)HTML/XML document. This is for those queries that doesn't have any context defined
+				# xpath_main_context = whole (X)HTML/XML document. This is for those queries that doesn't
+				# Have any context defined
 
 				if self.request.current_content_type in self.request.XML_MIME_TYPES:
 

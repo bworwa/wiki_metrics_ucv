@@ -13,10 +13,6 @@
 		<charset>utf8</charset>
 	</general>
 	<xpath>
-		<!--
-			Just an example on how to retrieve the date of the last update in wikipedia's main page history
-			(check src/main.py)
-		-->
 		<queries hosts="es.wikipedia.org, en.wikipedia.org">
 			<query name="history" context="none">/html/body/div[@id="content"]/div[@id="bodyContent"]/form[@id="mw-history-compare"]/ul[@id="pagehistory"]</query>
 			<query name="revision" context="history">/ul/li</query>
