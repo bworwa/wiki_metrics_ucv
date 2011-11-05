@@ -49,4 +49,8 @@
 	<message name="value_error">'%(expression)s' caused a value error</message>
 	<!-- Others -->
 
+	<!-- Mongo -->
+	<message name="invalid_port">Port must be an integer value in '%(path_to_xml)s'</message>
+	<!-- Mongo -->
+
 </messages>

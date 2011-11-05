@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<mongo>
+	<connection>
+		<host>localhost</host>
+		<port>27017</port>
+		<database>wiki_metrics_ucv</database>
+	</connection>
+</mongo>
