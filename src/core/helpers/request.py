@@ -5,7 +5,7 @@
 from httplib import HTTPConnection, HTTPException
 from urlparse import urlparse
 from robotparser import RobotFileParser
-from socket import gaierror
+from socket import gaierror, timeout
 from time import sleep
 
 # External
@@ -55,11 +55,13 @@ class Request:
 
 	current_response_code = 0
 
-	current_content = "<empty></empty>"
+	current_content = "<_/>"
 
 	current_content_type = None
 
 	current_charset = None
+
+	crawl_delay = 1
 
 	def __init__(self):
 
@@ -81,13 +83,15 @@ class Request:
 
 		self.current_response_code = 0
 
-		self.current_content = "<empty></empty>"
+		self.current_content = "<_/>"
 
 		self.current_content_type = None
 
 		self.current_charset = None
 
-	def knock(self, host, user_agent, url, time_to_sleep):
+		self.crawl_delay = 1
+
+	def knock(self, user_agent, url, retries = 0):
 
 		"""
 		Makes a request for '/robots.txt' and returns True if 'user_agent' can fetch 'url'. Returns False otherwise
@@ -95,15 +99,25 @@ class Request:
 		If we get a gaierror (DNS lookup error), this function will return False as everything else is doomed to fail
 		"""
 
+		# Until we resolve the /w/ problem we'll override /robots.txt
+
+		return True
+
+		host = urlparse(url)[1]
+
 		robot = RobotFileParser()
 
 		clearance = False
+
+		if retries > 0:
+
+			sleep(self.crawl_delay)
 
 		try:
 
 			# We try to get the resource /robots.txt
 
-			connection = HTTPConnection(host, 80, False, 1)
+			connection = HTTPConnection(host, 80)
 
 			connection.request(
 				self.GET,
@@ -114,41 +128,81 @@ class Request:
 
 			response = connection.getresponse()
 
-			if response.status == 200:
+			connection.close()
+
+			if response.status == 200:				
 
 				# If everthing went well, we feed the content of the resource to the parser
 
-				robot.parse(response.read().splitlines())
+				robot_lines = response.read().splitlines()
+
+				robot.parse(robot_lines)
 
 				# And resolve if we have clearance to fetch the url
 
 				clearance = robot.can_fetch(user_agent, url)
 
+				# We try to get the Crawl-delay directive, if it exists
+
+				try:
+
+					self.crawl_delay =  int(
+						"".join(list(
+							directive for directive in robot_lines if directive.lower().startswith("crawl-delay")
+						)).split(":")[1]
+					)
+
+				except IndexError:
+
+					# If no 'Crawl-delay' is specified, we leave it at 1 second
+
+					pass
+
+			elif response.status in [408, 500, 503]:
+
+				if retries < 3:
+
+					clearance = self.knock(user_agent, url, retries + 1)
+
+				else:
+
+					clearance = False
+
 			else:
 
-				# A 3xx, 4xx or 5xx error occurred. We just ignore /robots.txt and proceed
+				clearance = True			
 
-				clearance = True
+			if retries < 1:
 
-			connection.close()
-
-			sleep(time_to_sleep)
+				sleep(self.crawl_delay)
 
 			return clearance
 
 		except HTTPException:
 
-			# A request error occurred. We just ignore /robots.txt and proceed
+			# A request error occurred. We retry the request, if it fails we just ignore /robots.txt and proceed
 
-			return True
+			if retries < 3:
 
-		except gaierror:
+				return self.knock(user_agent, url, retries + 1)
 
-			# DNS lookup error, most probably everything else will fail. Let's just end it here
+			else:
 
-			return False
+				return True
 
-	def make(self, url, request_type, user_agent, desired_charset, time_to_sleep):
+		except timeout:
+
+			# Request timed out. We retry the request, if it fails we just ignore /robots.txt and proceed
+
+			if retries < 3:
+
+				return self.knock(user_agent, url, retries + 1)
+
+			else:
+
+				return True
+
+	def make(self, url, request_type, user_agent, desired_charset):
 
 		"""
 		Makes a request for the resource identified by 'url' of the type 'request_type' (supported types are 'HEAD' and 'GET')
@@ -189,7 +243,7 @@ class Request:
 			
 		# We create our HTTP connection instance (no request sent yet)
 
-		connection = HTTPConnection(host, 80, False, 30)
+		connection = HTTPConnection(host, 80, False, 25)
 
 		# And make the request for the 'path + query' specified resource (request sent)
 
@@ -204,6 +258,8 @@ class Request:
 
 		response = connection.getresponse()
 
+		connection.close()
+
 		self.current_response_code = response.status
 
 		# We make our own dictionary of headers as it will be more easy and natural to consult
@@ -214,7 +270,7 @@ class Request:
 
 		# We verify the response code. If it wasn't a successful request (2xx) execution ends here
 
-		self.verify_response_code(connection)
+		self.verify_response_code()
 
 		# At this point we have made a successful request and start processing the resource's content (in case of a GET request)
 		# For HEAD requests execution ends here
@@ -280,16 +336,12 @@ class Request:
 
 		# We close the connection and end the execution
 
-		connection.close()
+		sleep(self.crawl_delay)
 
-		sleep(time_to_sleep)
-
-	def verify_response_code(self, connection):
+	def verify_response_code(self):
 
 		# According to http://docs.python.org/howto/urllib2.html#error-codes
 
 		if self.current_response_code > 299 and self.current_response_code < 600:
-
-			connection.close()
 
 			raise ResponseCodeError(self.current_response_code)

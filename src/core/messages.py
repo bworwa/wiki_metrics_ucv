@@ -8,7 +8,7 @@ from sys import exit, stderr
 from string import whitespace
 from os.path import abspath, dirname
 
-# User defined
+# XCraper
 from helpers.validation import Validation
 from helpers.log import Log
 

@@ -14,6 +14,7 @@
 	<!-- Configuration -->
 
 	<!-- XPath -->
+	<message name="xpath_none_name">'none' is not a valid XPath query name. Found in '%(path_to_xml)s'</message>
 	<message name="xpath_duplicated_query">Duplicated query '%(xpath_query_name)s' in '%(path_to_xml)s'</message>
 	<message name="xpath_context_not_defined">Query context '%(xpath_query_context)s' is not defined in '%(path_to_xml)s'</message>
 	<message name="xpath_feature_not_implemented">Query '%(query)s' uses features currently not supported</message>
@@ -23,7 +24,7 @@
 	<message name="xpath_unknown_prefix_error">Query '%(query)s' contains a QName with a namespace prefix that has no corresponding namespace declaration in the expression context</message>
 	<message name="xpath_unknown_variable_error">Query '%(query)s' contains a variable that has no binding in the expression context</message>
 	<!-- XPath -->
-	
+
 	<!-- Scraper -->
 	<message name="host_not_defined">There are no XPath queries defined for host '%(host)s'. URL '%(url)s' will be ignored</message>
 	<message name="invalid_url">URL '%(url)s' is not a valid HTTP/HTTPS/SHTTP URL and will be ignored</message>
@@ -36,6 +37,7 @@
 	<!-- Xpath -->
 
 	<!-- Requests -->
+	<message name="connection_timed_out">Request for '%(url)s' timed out. This URL will be ignored</message>
 	<message name="dns_lookup_failed">Could not connect to '%(url)s' because the DNS lookup failed. This URL will be ignored</message>
 	<message name="not_connected">Could not send data to '%(host)s' because there was no connection established. URL '%(url)s' will be ignored</message>
 	<message name="unknown_protocol">URL '%(url)s' returned an unknown HTTP version. This URL will be ignored</message>
@@ -52,5 +54,9 @@
 	<!-- Mongo -->
 	<message name="invalid_port">Port must be an integer value in '%(path_to_xml)s'</message>
 	<!-- Mongo -->
+
+	<!-- Wikimetrics -->
+	<message name="visiting_url">Visiting URL '%(url)s'. Checkpoint set at revision '%(mediawiki_id)d'</message>
+	<!-- Wikimetrics -->
 
 </messages>

@@ -8,11 +8,11 @@ from urlparse import urlparse
 from BaseHTTPServer import BaseHTTPRequestHandler
 from email.utils import parsedate
 from time import time, localtime, mktime
-from socket import gaierror
+from socket import gaierror, timeout
 from httplib import HTTPException, NotConnected, InvalidURL, UnknownProtocol, UnknownTransferEncoding, UnimplementedFileMode, IncompleteRead, ImproperConnectionState, BadStatusLine
 from os.path import abspath, dirname
 
-# User defined
+# XCraper
 from messages import Messages
 from helpers.validation import Validation
 from helpers.request import Request, ResponseCodeError
@@ -31,8 +31,7 @@ class Scraper:
 			"utf8",
 			"ascii"
 		],
-		"charset" : None,
-		"time_between_requests" : 1 # Seconds
+		"charset" : None
 	}
 
 	messages = Messages()
@@ -268,6 +267,12 @@ class Scraper:
 							"path_to_xml" : self.config["path_to_config"]
 						}, self.messages.INTERNAL)
 
+					if xpath_query_name == "none":
+
+						self.messages.raise_error(self.messages.XPATH_NONE_NAME % {
+							"path_to_xml" : self.config["path_to_config"]
+						}, self.messages.INTERNAL)
+
 					# Because the attribute 'name' will later translate into a variable, it must be a valid identifier
 					# Therefore we validate the name
 
@@ -430,6 +435,8 @@ class Scraper:
 		# At this point 'url' must be a valid URL
 		# However we revalidate it as this class is solution independent
 
+		url = url.strip()
+
 		if not self.validation.validate_url(url):
 
 			# The URL is invalid. There's nothing to do, we skip the URL and move on to the next
@@ -442,7 +449,7 @@ class Scraper:
 
 		# We get the host out of the URL
 
-		host = urlparse(url.strip().lower())[1]
+		host = urlparse(url)[1]
 
 		try:
 
@@ -463,12 +470,24 @@ class Scraper:
 
 		# We try to get '/robots.txt' to see if we have clearance to access the url
 
-		if not self.request.knock(host, self.config["user_agent"], url, self.config["time_between_requests"]):
+		try:
 
-			# The host has explicitly specified that he doesn't want us to fetch this URL
+			if not self.request.knock(self.config["user_agent"], url):
 
-			self.messages.issue_warning(self.messages.ROBOT_FORBIDDEN % {
-				"host" : host,
+				# The host has explicitly specified that he doesn't want us to fetch this URL
+
+				self.messages.issue_warning(self.messages.ROBOT_FORBIDDEN % {
+					"host" : host,
+					"url" : url
+				})
+
+				return False
+
+		except gaierror:
+
+			# A DNS lookup error ocurred, most probably everything else will fail. Let's just end it here
+
+			self.messages.issue_warning(self.messages.DNS_LOOKUP_FAILED % {
 				"url" : url
 			})
 
@@ -488,8 +507,7 @@ class Scraper:
 				url,
 				self.request.HEAD,
 				self.config["user_agent"],
-				self.config["charset"],
-				self.config["time_between_requests"]
+				self.config["charset"]
 			)
 
 		except ResponseCodeError as response_code:
@@ -510,7 +528,7 @@ class Scraper:
 
 			# Socket was not open and failed to open a second time automatically
 
-			self.messages.raise_error(self.messages.NOT_CONNECTED % {
+			self.messages.issue_warning(self.messages.NOT_CONNECTED % {
 					"host" : host,
 					"url" : url
 			})
@@ -521,7 +539,7 @@ class Scraper:
 
 			# A port was given and was non-numeric or empty
 
-			self.messages.raise_error(self.messages.INVALID_URL % {
+			self.messages.issue_warning(self.messages.INVALID_URL % {
 				"url" : url
 			})
 
@@ -531,7 +549,7 @@ class Scraper:
 
 			# We got a protocol that wasn't HTTP/0.9, HTTP/1.0 or HTTP/1.1
 
-			self.messages.raise_error(self.messages.UNKNOWN_PROTOCOL % {
+			self.messages.issue_warning(self.messages.UNKNOWN_PROTOCOL % {
 				"url" : url
 			})
 
@@ -554,7 +572,7 @@ class Scraper:
 			# Either there was a synch problem or the socket was interrupted by a signal (resulting in a partial read)
 			# The content is corrupted and cannot be used
 
-			self.messages.raise_error(self.messages.INCOMPLETE_READ % {
+			self.messages.issue_warning(self.messages.INCOMPLETE_READ % {
 				"url" : url
 			})
 
@@ -567,7 +585,7 @@ class Scraper:
 			# 'ResponseNotReady' is raised when the server don't send back any headers or the socket is
 			# closed/interrupted while trying to read them
 
-			self.messages.raise_error(self.messages.REQUEST_FAILED % {
+			self.messages.issue_warning(self.messages.REQUEST_FAILED % {
 				"url" : url
 			})
 
@@ -577,7 +595,7 @@ class Scraper:
 
 			# The server responded with an unknown HTTP response code (< 100 || > 999)
 
-			self.messages.raise_error(self.messages.BAD_STATUS_LINE % {
+			self.messages.issue_warning(self.messages.BAD_STATUS_LINE % {
 				"url" : url
 			})
 
@@ -587,7 +605,17 @@ class Scraper:
 
 			# Any other unknown exception is caught here
 
-			self.messages.raise_error(self.messages.REQUEST_FAILED % {
+			self.messages.issue_warning(self.messages.REQUEST_FAILED % {
+				"url" : url
+			})
+
+			return False
+
+		except timeout:
+
+			# Connection timed out
+
+			self.messages.issue_warning(self.messages.CONNECTION_TIMED_OUT % {
 				"url" : url
 			})
 
@@ -669,8 +697,7 @@ class Scraper:
 						url,
 						self.request.GET,
 						self.config["user_agent"],
-						self.config["charset"],
-						self.config["time_between_requests"]
+						self.config["charset"]
 					)
 
 				except ResponseCodeError as response_code:
@@ -691,7 +718,7 @@ class Scraper:
 
 					# Socket was not open and failed to open a second time automatically
 
-					self.messages.raise_error(self.messages.NOT_CONNECTED % {
+					self.messages.issue_warning(self.messages.NOT_CONNECTED % {
 						"host" : host,
 						"url" : url
 					})
@@ -702,7 +729,7 @@ class Scraper:
 
 					# A port was given and was non-numeric or empty
 
-					self.messages.raise_error(self.messages.INVALID_URL % {
+					self.messages.issue_warning(self.messages.INVALID_URL % {
 						"url" : url
 					})
 
@@ -712,7 +739,7 @@ class Scraper:
 
 					# We got a protocol that wasn't HTTP/0.9, HTTP/1.0 or HTTP/1.1
 
-					self.messages.raise_error(self.messages.UNKNOWN_PROTOCOL % {
+					self.messages.issue_warning(self.messages.UNKNOWN_PROTOCOL % {
 						"url" : url
 					})
 
@@ -735,7 +762,7 @@ class Scraper:
 					# Either there was a synch problem or the socket was interrupted by a signal (resulting in a partial read)
 					# The content is corrupted and cannot be used
 
-					self.messages.raise_error(self.messages.INCOMPLETE_READ % {
+					self.messages.issue_warning(self.messages.INCOMPLETE_READ % {
 						"url" : url
 					})
 
@@ -748,7 +775,7 @@ class Scraper:
 					# 'ResponseNotReady' is raised when the server don't send back any headers or the socket is
 					# closed/interrupted while trying to read them
 
-					self.messages.raise_error(self.messages.REQUEST_FAILED % {
+					self.messages.issue_warning(self.messages.REQUEST_FAILED % {
 						"url" : url
 					})
 
@@ -758,7 +785,7 @@ class Scraper:
 
 					# The server responded with an unknown HTTP response code (< 100 || > 999)
 
-					self.messages.raise_error(self.messages.BAD_STATUS_LINE % {
+					self.messages.issue_warning(self.messages.BAD_STATUS_LINE % {
 						"url" : url
 					})
 
@@ -768,7 +795,17 @@ class Scraper:
 
 					# Any other unknown exception is caught here
 
-					self.messages.raise_error(self.messages.REQUEST_FAILED % {
+					self.messages.issue_warning(self.messages.REQUEST_FAILED % {
+						"url" : url
+					})
+
+					return False
+
+				except timeout:
+
+					# Connection timed out
+
+					self.messages.issue_warning(self.messages.CONNECTION_TIMED_OUT % {
 						"url" : url
 					})
 
@@ -816,6 +853,10 @@ class Scraper:
 									break
 
 							for context in xpath_context:
+
+								if not context:
+
+									context = "<_/>"
 
 								node = minidom.parseString(context)
 
