@@ -4,7 +4,7 @@
 # Native
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
-from sys import exit, stderr
+from sys import exit, stderr, stdout
 from string import whitespace
 from os.path import abspath, dirname
 
@@ -148,3 +148,29 @@ class Messages:
 			except:
 
 				pass
+
+	def inform(self, message, new_line = True, section = SCRAPER, log_it = True):
+
+		if new_line:
+
+			message = message + ".\n"
+
+		stdout.write(message)
+
+		if log_it:
+
+			try:
+
+				self.log.log_this(message, section)
+
+			except IOError:
+
+				self.issue_warning(self.GENERIC_FILE_IO_ERROR % {
+					"path_to_file" : self.log.current_path_to_log
+				}, self.INTERNAL)
+
+			except OSError:
+
+				self.issue_warning(self.CANNOT_CREATE_DIRECTORY % {
+					"directory" : self.log.current_path_to_log
+				}, self.INTERNAL)

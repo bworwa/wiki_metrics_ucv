@@ -472,7 +472,7 @@ class Scraper:
 
 		try:
 
-			if not self.request.knock(self.config["user_agent"], url):
+			if not self.request.knock(self.config["user_agent"], url, True):
 
 				# The host has explicitly specified that he doesn't want us to fetch this URL
 

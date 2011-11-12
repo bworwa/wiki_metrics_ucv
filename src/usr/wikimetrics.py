@@ -1,15 +1,13 @@
-# Native
 
+# Native
 from urlparse import urlparse, parse_qs
 from time import strptime, mktime
 
 # XCraper
-
 from core.scraper import Scraper
 from core.messages import Messages
 
 # User defined
-
 from usr.mongo import Mongo
 
 class Wikimetrics:
@@ -36,52 +34,28 @@ class Wikimetrics:
 
 		pass
 
-	def get_next_article(self):
+	def run(self, url, last_update, last_revision = None, article_url = None):
 
-		article = self.mongo.db.articles.find({}, { "_id" : 1, "last_update" : 1 }).sort("priority", -1).limit(1)
+		if not last_revision:
 
-		if article.count(True) == 1:
+			revision = self.mongo.get_last_revision(url)
 
-			return { "url" : article[0]["_id"], "last_update" : article[0]["last_update"] }
+			if revision:
 
-		else:
+				last_revision = revision["mediawiki_id"]
 
-			return None
+			else:
 
-	def get_last_revision(self, url):
+				last_revision = 0
 
-		revision = self.mongo.db.histories.find({ "article" : url }, { "_id" : 1 }).sort("_id", -1).limit(1)
+		if not article_url:
 
-		if revision.count(True) == 1:
+			article_url = url
 
-			return { "mediawiki_id" : revision[0]["_id"] }
-
-		else:
-
-			return None
-
-	def insert_revision(self, revision):
-
-		self.mongo.db.histories.insert(revision)
-
-	def run(self, url, last_update):
-
-		revision = self.get_last_revision(url)
-
-		if revision:
-
-			last_revision = revision["mediawiki_id"]
-
-		else:
-
-			last_revision = 0
-
-		# TODO: move to function 'inform' in core.messages
-
-		print self.messages.VISITING_URL % {
+		self.messages.inform(self.messages.VISITING_URL % {
 			"url" : url,
 			"mediawiki_id" : last_revision
-		}
+		}, True)
 
 		response_code = self.scraper.run(url + "&limit=" + str(self.revisions_limit), last_update)
 
@@ -97,7 +71,7 @@ class Wikimetrics:
 
 					revision = {
 						"_id" : mediawiki_id,
-						"article" : url,
+						"article" : article_url,
 						"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
 						"user" : self.scraper.user[index],
 						"minor" : True if self.scraper.minor[index] else False,
@@ -105,22 +79,50 @@ class Wikimetrics:
 						"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
 					}
 
-					self.insert_revision(revision)
+					self.mongo.insert_revision(revision)
 
 					new_revisions_count += 1
 
+				else:
+
+					break
+
 			if new_revisions_count == 0:
 
-				print "No further revisions found."
+				self.messages.inform(self.messages.NO_NEW_REVISIONS_FOUND % {
+					"mediawiki_id" : last_revision,
+					"url" : url
+				}, True)
 
 			elif new_revisions_count == self.revisions_limit:
 
-				try:
+				if self.scraper.next_page[0]:
 
-					print "We need to visit the next page."
+					self.messages.inform(self.messages.VISITING_NEXT_PAGE % {
+						"quantity" : new_revisions_count,
+						"url" : url
+					}, True)
 
-					self.scraper.next_page
+					parsed_url = urlparse(url)
 
-				except AttributeError:
+					self.run(parsed_url[0] + "://" + parsed_url[1] + self.scraper.next_page[0], 0, last_revision, article_url)
 
-					pass
+				else:
+
+					self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
+						"quantity" : new_revisions_count,
+						"url" : url
+					}, True)
+
+			else:
+
+				self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
+					"quantity" : new_revisions_count,
+					"url" : url
+				}, True)
+
+		else:
+
+			# [Medium] TODO: An error ocurred while doing the request
+
+			pass

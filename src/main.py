@@ -1,11 +1,13 @@
 
 # User defined
-
 from usr.wikimetrics import Wikimetrics
+from usr.mongo import Mongo
+
+mongo = Mongo()
 
 wikimetrics = Wikimetrics()
 
-article = wikimetrics.get_next_article()
+article = mongo.get_next_article()
 
 if article:
 

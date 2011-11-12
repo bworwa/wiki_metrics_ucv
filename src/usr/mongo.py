@@ -146,3 +146,31 @@ class Mongo:
 		# [Low] TODO
 
 		pass
+
+	def get_next_article(self):
+
+		article = self.db.articles.find({}, { "_id" : 1, "last_update" : 1 }).sort("priority", -1).limit(1)
+
+		if article.count(True) == 1:
+
+			return { "url" : article[0]["_id"], "last_update" : article[0]["last_update"] }
+
+		else:
+
+			return None
+
+	def get_last_revision(self, url):
+
+		revision = self.db.histories.find({ "article" : url }, { "_id" : 1 }).sort("_id", -1).limit(1)
+
+		if revision.count(True) == 1:
+
+			return { "mediawiki_id" : revision[0]["_id"] }
+
+		else:
+
+			return None
+
+	def insert_revision(self, revision):
+
+		self.db.histories.insert(revision)

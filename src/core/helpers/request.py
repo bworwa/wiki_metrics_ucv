@@ -91,17 +91,19 @@ class Request:
 
 		self.crawl_delay = 1
 
-	def knock(self, user_agent, url, retries = 0):
+	def knock(self, user_agent, url, override = False, retries = 0):
 
 		"""
 		Makes a request for '/robots.txt' and returns True if 'user_agent' can fetch 'url'. Returns False otherwise
 		If we get a HTTP response code other than '200' or any request error occurs, this function will return True
 		If we get a gaierror (DNS lookup error), this function will return False as everything else is doomed to fail
+
+		If 'override' is True, this function will automatically return True. Default value for override is False
 		"""
 
-		# Until we resolve the /w/ problem we'll override /robots.txt
+		if override:
 
-		return True
+			return True
 
 		host = urlparse(url)[1]
 
@@ -162,7 +164,7 @@ class Request:
 
 				if retries < 3:
 
-					clearance = self.knock(user_agent, url, retries + 1)
+					clearance = self.knock(user_agent, url, False, retries + 1)
 
 				else:
 
@@ -184,7 +186,7 @@ class Request:
 
 			if retries < 3:
 
-				return self.knock(user_agent, url, retries + 1)
+				return self.knock(user_agent, url, False, retries + 1)
 
 			else:
 
@@ -196,7 +198,7 @@ class Request:
 
 			if retries < 3:
 
-				return self.knock(user_agent, url, retries + 1)
+				return self.knock(user_agent, url, False, retries + 1)
 
 			else:
 
