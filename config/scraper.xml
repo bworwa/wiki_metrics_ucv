@@ -11,7 +11,7 @@
 		<charset>ascii</charset>
 	</general>
 	<xpath>
-		<queries hosts="www.wikipedia.org, en.wikipedia.org">
+		<queries hosts="es.wikipedia.org, en.wikipedia.org">
 			<query name="history" context="none">/html/body/div[@id="content"]/div[@id="bodyContent"]/form[@id="mw-history-compare"]/ul[@id="pagehistory"]</query>
 			<query name="revision" context="history">/ul/li</query>
 			<query name="mediawiki_id" context="revision">/li/a[1]/@href</query>
