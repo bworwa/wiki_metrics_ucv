@@ -60,6 +60,7 @@
 	<message name="no_new_revisions_found">No new revisions found since revision '%(mediawiki_id)d' at URL '%(url)s'</message>
 	<message name="new_revisions_found">%(quantity)d new revision(s) found at URL '%(url)s'</message>
 	<message name="visiting_next_page">%(quantity)d/%(quantity)d new revision(s) found at URL '%(url)s'. We need to visit the next page</message>
+	<message name="check_url">Please manually check URL '%(url)s'</message>
 	<!-- Wikimetrics -->
 
 </messages>

@@ -147,6 +147,34 @@ class Mongo:
 
 		pass
 
+	def insert_new_article(self, url, priority = 0.5, last_update = 0):
+
+		self.db.articles.insert({ "_id" : url, "priority" : priority, "last_update" : last_update })
+
+	def remove_article(self, url):
+
+		self.db.articles.remove({ "_id" : url })
+
+	def remove_histories_by_article(self, article_url):
+
+		self.db.histories.remove({ "article" : article_url })
+
+	def update_article_url(self, old_url, new_url):
+
+		article = self.db.articles.find({ "_id" : old_url })
+
+		if article.count() == 1:
+
+			self.insert_new_article(new_url, article[0]["priority"], article[0]["last_update"])
+
+			self.db.histories.update({ "article" : old_url }, { "$set" : { "article" : new_url } } )
+
+			self.remove_article(old_url)
+
+		else:
+
+			self.insert_new_article(new_url)
+
 	def get_next_article(self):
 
 		article = self.db.articles.find({}, { "_id" : 1, "last_update" : 1 }).sort("priority", -1).limit(1)
@@ -157,7 +185,7 @@ class Mongo:
 
 		else:
 
-			return None
+			return None		
 
 	def get_last_revision(self, url):
 

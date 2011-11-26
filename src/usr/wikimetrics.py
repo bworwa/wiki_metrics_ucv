@@ -24,7 +24,7 @@ class Wikimetrics:
 
 	def __init__(self):
 
-		# [High] TODO
+		# [Low] TODO
 
 		pass
 
@@ -61,51 +61,64 @@ class Wikimetrics:
 
 		if response_code:
 
-			new_revisions_count = 0
+			if response_code == 200:
 
-			for index in range(len(self.scraper.revision)):
+				# OK
 
-				mediawiki_id = int(parse_qs(self.scraper.mediawiki_id[index])["oldid"][0])
+				new_revisions_count = 0
 
-				if mediawiki_id and mediawiki_id > last_revision:
+				for index in range(len(self.scraper.revision)):
 
-					revision = {
-						"_id" : mediawiki_id,
-						"article" : article_url,
-						"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
-						"user" : self.scraper.user[index],
-						"minor" : True if self.scraper.minor[index] else False,
-						"size" : int("".join(list(number for number in self.scraper.size[index] if number.isdigit()))),
-						"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
-					}
+					if self.scraper.mediawiki_id[index]:
 
-					self.mongo.insert_revision(revision)
+						mediawiki_id = int(parse_qs(self.scraper.mediawiki_id[index])["oldid"][0])
 
-					new_revisions_count += 1
+						if mediawiki_id > last_revision:
 
-				else:
+							revision = {
+								"_id" : mediawiki_id,
+								"article" : article_url,
+								"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
+								"user" : self.scraper.user[index],
+								"minor" : True if self.scraper.minor[index] else False,
+								"size" : int("".join(list(number for number in self.scraper.size[index] if number.isdigit()))),
+								"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
+							}
 
-					break
+							self.mongo.insert_revision(revision)
 
-			if new_revisions_count == 0:
+							new_revisions_count += 1
 
-				self.messages.inform(self.messages.NO_NEW_REVISIONS_FOUND % {
-					"mediawiki_id" : last_revision,
-					"url" : url
-				}, True)
+						else:
 
-			elif new_revisions_count == self.revisions_limit:
+							break
 
-				if self.scraper.next_page[0]:
+				if new_revisions_count == 0:
 
-					self.messages.inform(self.messages.VISITING_NEXT_PAGE % {
-						"quantity" : new_revisions_count,
+					self.messages.inform(self.messages.NO_NEW_REVISIONS_FOUND % {
+						"mediawiki_id" : last_revision,
 						"url" : url
 					}, True)
 
-					parsed_url = urlparse(url)
+				elif new_revisions_count == self.revisions_limit:
 
-					self.run(parsed_url[0] + "://" + parsed_url[1] + self.scraper.next_page[0], 0, last_revision, article_url)
+					if self.scraper.next_page[0]:
+
+						self.messages.inform(self.messages.VISITING_NEXT_PAGE % {
+							"quantity" : new_revisions_count,
+							"url" : url
+						}, True)
+
+						parsed_url = urlparse(url)
+
+						self.run(parsed_url[0] + "://" + parsed_url[1] + self.scraper.next_page[0], 0, last_revision, article_url)
+
+					else:
+
+						self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
+							"quantity" : new_revisions_count,
+							"url" : url
+						}, True)
 
 				else:
 
@@ -114,12 +127,45 @@ class Wikimetrics:
 						"url" : url
 					}, True)
 
+			elif response_code == 301:
+
+				# Moved permanently
+
+				parsed_url = urlparse(self.scraper.request.current_headers["location"], None, False)
+
+				new_url = parsed_url[0] + "://" + parsed_url[1] + parsed_url[2] + parsed_url[3] + "?title=" + parse_qs(parsed_url[4])["title"][0] + "&action=history"
+
+				self.mongo.update_article_url(article_url, new_url)				
+
+				self.run(new_url, 0)
+
+			elif response_code in [302, 303, 307]:
+
+				# Found, See other
+
+				parsed_url = urlparse(self.scraper.request.current_headers["location"], None, False)
+
+				temporal_url = parsed_url[0] + "://" + parsed_url[1] + parsed_url[2] + parsed_url[3] + "?title=" + parse_qs(parsed_url[4])["title"][0] + "&action=history"
+
+				self.run(temporal_url, 0, article_url)
+
+			elif response_code == 408:
+
+				# Timed out
+
+				self.run(url, 0)
+
+			elif response_code == 410:
+
+				self.mongo.remove_article(article_url)
+
+				self.mongo.remove_histories_by_article(article_url)
+
 			else:
 
-				self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
-					"quantity" : new_revisions_count,
+				self.messages.issue_warning(self.messages.CHECK_URL % {
 					"url" : url
-				}, True)
+				})
 
 		else:
 
