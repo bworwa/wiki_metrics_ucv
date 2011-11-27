@@ -1,5 +1,8 @@
 
 # Native
+from xml.dom import minidom
+from xml.parsers.expat import ExpatError
+from os.path import abspath, dirname
 from urlparse import urlparse, parse_qs
 from time import strptime, mktime
 
@@ -14,7 +17,10 @@ class Wikimetrics:
 
 	# TODO: Move to config
 
-	revisions_limit = 20
+	config = {
+		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/wikimetrics.xml",
+		"revisions_limit" : 0
+	}
 
 	mongo = Mongo()
 
@@ -24,9 +30,66 @@ class Wikimetrics:
 
 	def __init__(self):
 
-		# [Low] TODO
+		try:
 
-		pass
+			dom = minidom.parse(self.config["path_to_config"])
+
+		except IOError:
+
+			self.messages.raise_error(self.messages.XML_CONFIG_IO_ERROR % {
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		except ExpatError:
+
+			self.messages.raise_error(self.messages.INVALID_XML_FILE % {
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		try:
+
+			wikimetrics = dom.getElementsByTagName("wikimetrics")[0]
+
+		except IndexError:
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "wikimetrics",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		try:
+
+			revisions_limit = wikimetrics.getElementsByTagName("revisions_limit")[0]
+
+		except IndexError:
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "revisions_limit",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		if not revisions_limit.firstChild or not revisions_limit.firstChild.nodeValue.strip():
+
+			self.messages.raise_error(self.messages.EMPTY_XML_TAG_VALUE % {
+				"xml_tag_name" : "revisions_limit",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		try:
+
+			self.config["revisions_limit"] = int(revisions_limit.firstChild.nodeValue.strip())
+
+		except ValueError:
+
+			self.messages.raise_error(self.messages.INVALID_REVISIONS_LIMIT % {
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+		
+		if self.config["revisions_limit"] < 1:
+
+			self.messages.raise_error(self.messages.INVALID_REVISIONS_LIMIT % {
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
 
 	def __del__(self):
 
@@ -55,9 +118,9 @@ class Wikimetrics:
 		self.messages.inform(self.messages.VISITING_URL % {
 			"url" : url,
 			"mediawiki_id" : last_revision
-		}, True)
+		})
 
-		response_code = self.scraper.run(url + "&limit=" + str(self.revisions_limit), last_update)
+		response_code = self.scraper.run(url + "&limit=" + str(self.config["revisions_limit"]), last_update)
 
 		if response_code:
 
@@ -75,13 +138,15 @@ class Wikimetrics:
 
 						if mediawiki_id > last_revision:
 
+							size = "".join(list(number for number in self.scraper.size[index] if number.isdigit()))
+
 							revision = {
 								"_id" : mediawiki_id,
 								"article" : article_url,
 								"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
 								"user" : self.scraper.user[index],
 								"minor" : True if self.scraper.minor[index] else False,
-								"size" : int("".join(list(number for number in self.scraper.size[index] if number.isdigit()))),
+								"size" :  int(size) if size else 0,
 								"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
 							}
 
@@ -98,16 +163,16 @@ class Wikimetrics:
 					self.messages.inform(self.messages.NO_NEW_REVISIONS_FOUND % {
 						"mediawiki_id" : last_revision,
 						"url" : url
-					}, True)
+					})
 
-				elif new_revisions_count == self.revisions_limit:
+				elif new_revisions_count == self.config["revisions_limit"]:
 
 					if self.scraper.next_page[0]:
 
 						self.messages.inform(self.messages.VISITING_NEXT_PAGE % {
 							"quantity" : new_revisions_count,
 							"url" : url
-						}, True)
+						})
 
 						parsed_url = urlparse(url)
 
@@ -118,14 +183,14 @@ class Wikimetrics:
 						self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
 							"quantity" : new_revisions_count,
 							"url" : url
-						}, True)
+						})
 
 				else:
 
 					self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
 						"quantity" : new_revisions_count,
 						"url" : url
-					}, True)
+					})
 
 			elif response_code == 301:
 

@@ -56,6 +56,7 @@
 	<!-- Mongo -->
 
 	<!-- Wikimetrics -->
+	<message name="invalid_revisions_limit">Revisions limit must be an integer value greater than 0 in '%(path_to_xml)s</message>
 	<message name="visiting_url">Visiting URL '%(url)s'. Checkpoint set at revision '%(mediawiki_id)d'</message>
 	<message name="no_new_revisions_found">No new revisions found since revision '%(mediawiki_id)d' at URL '%(url)s'</message>
 	<message name="new_revisions_found">%(quantity)d new revision(s) found at URL '%(url)s'</message>

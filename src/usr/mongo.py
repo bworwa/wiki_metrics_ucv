@@ -105,7 +105,7 @@ class Mongo:
 
 		try:
 
-			self.config["port"] = int(port.firstChild.nodeValue.strip().lower())
+			self.config["port"] = int(port.firstChild.nodeValue.strip())
 
 		except ValueError:
 

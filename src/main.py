@@ -12,7 +12,3 @@ article = mongo.get_next_article()
 if article:
 
 	wikimetrics.run(article["url"], article["last_update"])
-
-else:
-
-	print "No URLs found, collection 'articles' is empty."
