@@ -168,7 +168,7 @@ class Wikimetrics:
 
 						mediawiki_id = int(parse_qs(self.scraper.mediawiki_id[index])["oldid"][0])
 
-						if mediawiki_id == last_revision:
+						if mediawiki_id > last_revision:
 
 							size = "".join(list(number for number in self.scraper.size[index] if number.isdigit()))
 
