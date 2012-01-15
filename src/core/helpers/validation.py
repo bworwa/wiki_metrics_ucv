@@ -23,7 +23,7 @@ class Validation:
 
 		# According to http://docs.python.org/reference/lexical_analysis.html#identifiers
 
-		match = search("^[a-z_][a-z0-9_]*", identifier, IGNORECASE)
+		match = search("^[a-z_][a-z0-9_]*$", identifier.lower(), IGNORECASE)
 	
 		if match:
 

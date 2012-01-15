@@ -25,11 +25,23 @@ class Mongo:
 
 	db = None
 
-	def __init__(self):
+	def __init__(self, debug_force_config_content = None, debug_force_config_path = None):
 
 		try:
 
-			dom = minidom.parse(self.config["path_to_config"])
+			if debug_force_config_content:
+
+				dom = minidom.parseString(debug_force_config_content)
+
+			else:
+
+				if debug_force_config_path:
+
+					dom = minidom.parse(debug_force_config_path)				
+
+				else:
+
+					dom = minidom.parse(self.config["path_to_config"])
 
 		except IOError:
 
@@ -201,4 +213,20 @@ class Mongo:
 
 	def insert_revision(self, revision):
 
-		self.db.histories.insert(revision)
+		self.db.histories.insert(revision, True, True)
+
+	def update_article_pending_url(self, url, pending_url):
+
+		self.db.articles.update({ "_id" : url }, { "$set" : { "pending_url" : pending_url } } )
+
+	def get_pending_url(self, url):
+
+		article = self.db.articles.find({ "_id" : url }, { "pending_url" : 1 })
+
+		if article.count() == 1:
+
+			return article[0]["pending_url"]
+
+		else:
+
+			return None

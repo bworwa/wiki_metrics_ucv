@@ -91,7 +91,7 @@ class Request:
 
 		self.crawl_delay = 1
 
-	def knock(self, user_agent, url, override = False, retries = 0):
+	def knock(self, user_agent, url, override = False, retries = 0, debug_force_status = None):
 
 		"""
 		Makes a request for '/robots.txt' and returns True if 'user_agent' can fetch 'url'. Returns False otherwise
@@ -130,13 +130,17 @@ class Request:
 
 			response = connection.getresponse()
 
+			robot_lines = response.read().splitlines()
+
 			connection.close()
 
-			if response.status == 200:				
+			if debug_force_status:
+
+				response.status = debug_force_status
+
+			if response.status == 200 and filter(None, robot_lines) != []:
 
 				# If everthing went well, we feed the content of the resource to the parser
-
-				robot_lines = response.read().splitlines()
 
 				robot.parse(robot_lines)
 
@@ -164,11 +168,23 @@ class Request:
 
 				if retries < 3:
 
+					try:
+
+						sleep(self.current_headers["retry-after"] - self.crawl_delay)
+
+					except KeyError:
+
+						pass
+
+					except TypeError:
+
+						pass
+
 					clearance = self.knock(user_agent, url, False, retries + 1)
 
 				else:
 
-					clearance = False
+					clearance = True
 
 			else:
 
@@ -204,7 +220,7 @@ class Request:
 
 				return True
 
-	def make(self, url, request_type, user_agent, desired_charset):
+	def make(self, url, request_type, user_agent, desired_charset, debug_force_status = None):
 
 		"""
 		Makes a request for the resource identified by 'url' of the type 'request_type' (supported types are 'HEAD' and 'GET')
@@ -262,7 +278,13 @@ class Request:
 
 		connection.close()
 
-		self.current_response_code = response.status
+		if debug_force_status:
+
+			self.current_response_code = debug_force_status
+
+		else:
+
+			self.current_response_code = response.status
 
 		# We make our own dictionary of headers as it will be more easy and natural to consult
 

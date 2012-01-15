@@ -2,7 +2,7 @@
 """Core libraries, do not change"""
 
 # External
-from xpath import find, findvalue
+from xpath import find, findvalues
 
 class Xpath:
 
@@ -29,11 +29,13 @@ class Xpath:
 
 		if get_value:
 
-			xpath_result = findvalue(query, context)
+			xpath_result = findvalues(query, context)
 
 			if xpath_result:
 
-				result_list.append(xpath_result.strip().encode(charset))
+				for result in xpath_result:
+
+					result_list.append(result.strip().encode(charset))
 
 			else:
 

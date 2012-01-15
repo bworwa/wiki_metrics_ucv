@@ -4,21 +4,25 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from os.path import abspath, dirname
 from urlparse import urlparse, parse_qs
-from time import strptime, mktime
+from time import strptime, mktime, sleep
 
 # XCraper
 from core.scraper import Scraper
 from core.messages import Messages
 
+#pymongo
+from pymongo.errors import DuplicateKeyError
+
 # User defined
 from usr.mongo import Mongo
+from usr.helpers.normalization import Normalization
 
 class Wikimetrics:
 
 	# TODO: Move to config
 
 	config = {
-		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/wikimetrics.xml",
+		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/wiki_metrics.xml",
 		"revisions_limit" : 0
 	}
 
@@ -28,11 +32,25 @@ class Wikimetrics:
 
 	messages = Messages()
 
-	def __init__(self):
+	normalization = Normalization()
+
+	def __init__(self, debug_force_config_content = None, debug_force_config_path = None):
 
 		try:
 
-			dom = minidom.parse(self.config["path_to_config"])
+			if debug_force_config_content:
+
+				dom = minidom.parseString(debug_force_config_content)
+
+			else:
+
+				if debug_force_config_path:
+
+					dom = minidom.parse(debug_force_config_path)				
+
+				else:
+
+					dom = minidom.parse(self.config["path_to_config"])
 
 		except IOError:
 
@@ -97,9 +115,23 @@ class Wikimetrics:
 
 		pass
 
-	def run(self, url, last_update, last_revision = None, article_url = None):
+	def run(self, url, last_update, last_revision = None, article_url = None, tries = 0):
 
-		if not last_revision:
+		if not article_url:
+
+			pending_url = self.mongo.get_pending_url(url)
+
+			if pending_url and pending_url != url:
+
+				self.run(pending_url, 0, 0, url)
+
+				pending_url = self.mongo.get_pending_url(url)
+
+				if pending_url:
+
+					return False
+
+		if last_revision is None:
 
 			revision = self.mongo.get_last_revision(url)
 
@@ -136,7 +168,7 @@ class Wikimetrics:
 
 						mediawiki_id = int(parse_qs(self.scraper.mediawiki_id[index])["oldid"][0])
 
-						if mediawiki_id > last_revision:
+						if mediawiki_id == last_revision:
 
 							size = "".join(list(number for number in self.scraper.size[index] if number.isdigit()))
 
@@ -150,9 +182,15 @@ class Wikimetrics:
 								"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
 							}
 
-							self.mongo.insert_revision(revision)
+							try:
 
-							new_revisions_count += 1
+								self.mongo.insert_revision(revision)
+
+								new_revisions_count += 1
+
+							except DuplicateKeyError:
+
+								break
 
 						else:
 
@@ -174,9 +212,13 @@ class Wikimetrics:
 							"url" : url
 						})
 
-						parsed_url = urlparse(url)
+						parsed_article_url = urlparse(article_url)
 
-						self.run(parsed_url[0] + "://" + parsed_url[1] + self.scraper.next_page[0], 0, last_revision, article_url)
+						next_page_url = self.normalization.normalize_mediawiki_url(
+							parsed_article_url[0] + "://" + parsed_article_url[1] + self.scraper.next_page[0]
+						)
+
+						self.run(next_page_url, 0, last_revision, article_url)
 
 					else:
 
@@ -192,33 +234,56 @@ class Wikimetrics:
 						"url" : url
 					})
 
+				self.mongo.update_article_pending_url(article_url, None)
+
 			elif response_code == 301:
 
 				# Moved permanently
 
-				parsed_url = urlparse(self.scraper.request.current_headers["location"], None, False)
-
-				new_url = parsed_url[0] + "://" + parsed_url[1] + parsed_url[2] + parsed_url[3] + "?title=" + parse_qs(parsed_url[4])["title"][0] + "&action=history"
+				new_url = self.normalization.normalize_mediawiki_url(self.scraper.request.current_headers["location"])
 
 				self.mongo.update_article_url(article_url, new_url)				
 
-				self.run(new_url, 0)
+				self.run(new_url, last_update, last_revision)
 
 			elif response_code in [302, 303, 307]:
 
 				# Found, See other
 
-				parsed_url = urlparse(self.scraper.request.current_headers["location"], None, False)
+				temporal_url = self.normalization.normalize_mediawiki_url(self.scraper.request.current_headers["location"])
 
-				temporal_url = parsed_url[0] + "://" + parsed_url[1] + parsed_url[2] + parsed_url[3] + "?title=" + parse_qs(parsed_url[4])["title"][0] + "&action=history"
+				self.run(temporal_url, last_update, last_revision, article_url)
 
-				self.run(temporal_url, 0, article_url)
+			elif response_code in [408, 500, 503]:
 
-			elif response_code == 408:
+				if tries < 3:
 
-				# Timed out
+					try:
 
-				self.run(url, 0)
+						sleep(self.scraper.request.current_headers["retry-after"] - self.scraper.request.crawl_delay)
+
+					except KeyError:
+
+						pass
+
+					except TypeError:
+
+						pass
+
+					self.run(url, last_update, last_revision, article_url, tries + 1)
+
+				else:
+
+					self.mongo.update_article_pending_url(article_url, url)
+
+					self.messages.issue_warning(self.messages.CHECK_URL % {
+						"url" : url
+					})
+
+					self.messages.inform(self.messages.PENDING_URL % {
+						"pending_url" : url,
+						"article" : article_url
+					})
 
 			elif response_code == 410:
 

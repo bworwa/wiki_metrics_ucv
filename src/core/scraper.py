@@ -42,7 +42,7 @@ class Scraper:
 
 	xpath = Xpath()
 
-	def __init__(self):
+	def __init__(self, debug_force_config_content = None, debug_force_config_path = None):
 
 		"""Constructor"""
 
@@ -51,7 +51,19 @@ class Scraper:
 
 		try:
 
-			dom = minidom.parse(self.config["path_to_config"])
+			if debug_force_config_content:
+
+				dom = minidom.parseString(debug_force_config_content)
+
+			else:
+
+				if debug_force_config_path:
+
+					dom = minidom.parse(debug_force_config_path)				
+
+				else:
+
+					dom = minidom.parse(self.config["path_to_config"])
 
 		except IOError:
 
@@ -619,7 +631,7 @@ class Scraper:
 				"url" : url
 			})
 
-			return False
+			return 408
 
 		except gaierror:
 
@@ -662,7 +674,7 @@ class Scraper:
 
 				# We transform the 9-tuple date into a UNIX timestamp
 
-				last_modified = mktime(last_modified) + (24 * 60 * 60)
+				last_modified = mktime(last_modified)
 
 			except OverflowError:
 
@@ -809,7 +821,7 @@ class Scraper:
 						"url" : url
 					})
 
-					return False
+					return 408
 
 				except gaierror:
 
@@ -877,6 +889,8 @@ class Scraper:
 
 						xpath_query["result"] = []
 
+					return self.request.current_response_code
+
 				else:
 
 					# The resource is not an (X)HTML/XML resource, we issue a warning and skip the URL
@@ -886,6 +900,8 @@ class Scraper:
 						"mime-type" : self.request.current_content_type
 					})
 
+					return False
+
 			else:
 
 				# URL is up-to-date, we issue a warning indicating this (so it can be logged) and skip the URL
@@ -893,6 +909,8 @@ class Scraper:
 				self.messages.issue_warning(self.messages.URL_NOT_MODIFIED % {
 					"url" : url
 				})
+
+				return False
 
 		else:
 
@@ -903,4 +921,4 @@ class Scraper:
 				"mime-type" : self.request.current_content_type
 			})
 
-		return self.request.current_response_code
+			return False

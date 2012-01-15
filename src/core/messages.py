@@ -38,11 +38,23 @@ class Messages:
 
 	validation = Validation()
 	
-	def __init__(self):
+	def __init__(self, debug_force_messages_content = None, debug_force_messages_path = None):
 
 		try:
 
-			dom = minidom.parse(self.config["path_to_config"])
+			if debug_force_messages_content:
+
+				dom = minidom.parseString(debug_force_messages_content)
+
+			else:
+
+				if debug_force_messages_path:
+
+					dom = minidom.parse(debug_force_messages_path)
+
+				else:
+
+					dom = minidom.parse(self.config["path_to_config"])
 
 		except IOError:
 
