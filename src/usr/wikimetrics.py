@@ -4,7 +4,8 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from os.path import abspath, dirname
 from urlparse import urlparse, parse_qs
-from time import strptime, mktime, sleep
+from time import strptime, mktime, sleep, time
+import md5
 
 # XCraper
 from core.scraper import Scraper
@@ -115,7 +116,7 @@ class Wikimetrics:
 
 		pass
 
-	def run(self, url, last_update, last_revision = None, article_url = None, tries = 0):
+	def run(self, url, last_update, last_revision = None, article_url = None, tries = 0, is_page = False):
 
 		if not article_url:
 
@@ -160,65 +161,83 @@ class Wikimetrics:
 
 				# OK
 
-				new_revisions_count = 0
+				history_md5 = md5.new(self.scraper.history[0]).hexdigest()
 
-				for index in range(len(self.scraper.revision)):
-
-					if self.scraper.mediawiki_id[index]:
-
-						mediawiki_id = int(parse_qs(self.scraper.mediawiki_id[index])["oldid"][0])
-
-						if mediawiki_id > last_revision:
-
-							size = "".join(list(number for number in self.scraper.size[index] if number.isdigit()))
-
-							revision = {
-								"_id" : mediawiki_id,
-								"article" : article_url,
-								"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
-								"user" : self.scraper.user[index],
-								"minor" : True if self.scraper.minor[index] else False,
-								"size" :  int(size) if size else 0,
-								"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
-							}
-
-							try:
-
-								self.mongo.insert_revision(revision)
-
-								new_revisions_count += 1
-
-							except DuplicateKeyError:
-
-								break
-
-						else:
-
-							break
-
-				if new_revisions_count == 0:
+				if history_md5 == self.mongo.get_last_history_md5(article_url):
 
 					self.messages.inform(self.messages.NO_NEW_REVISIONS_FOUND % {
 						"mediawiki_id" : last_revision,
 						"url" : url
 					})
 
-				elif new_revisions_count == self.config["revisions_limit"]:
+				else:
 
-					if self.scraper.next_page[0]:
+					new_revisions_count = 0
 
-						self.messages.inform(self.messages.VISITING_NEXT_PAGE % {
-							"quantity" : new_revisions_count,
+					for index in range(len(self.scraper.revision)):
+
+						if self.scraper.mediawiki_id[index]:
+
+							mediawiki_id = int(parse_qs(self.scraper.mediawiki_id[index])["oldid"][0])
+
+							if mediawiki_id > last_revision:
+
+								size = "".join(list(number for number in self.scraper.size[index] if number.isdigit()))
+
+								revision = {
+									"_id" : mediawiki_id,
+									"article" : article_url,
+									"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
+									"user" : self.scraper.user[index],
+									"minor" : True if self.scraper.minor[index] else False,
+									"size" :  int(size) if size else 0,
+									"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
+								}
+
+								try:
+
+									self.mongo.insert_revision(revision)
+
+									new_revisions_count += 1
+
+								except DuplicateKeyError:
+
+									break
+
+							else:
+
+								break
+
+					if new_revisions_count == 0:
+
+						self.messages.inform(self.messages.NO_NEW_REVISIONS_FOUND % {
+							"mediawiki_id" : last_revision,
 							"url" : url
 						})
 
-						parsed_article_url = urlparse(article_url)
+					elif new_revisions_count == self.config["revisions_limit"]:
 
-						next_page_url = self.normalization.normalize_mediawiki_url(
-							parsed_article_url[0] + "://" + parsed_article_url[1] + self.scraper.next_page[0]
-						)
+						if self.scraper.next_page[0]:
 
-						self.run(next_page_url, 0, last_revision, article_url)
+							self.messages.inform(self.messages.VISITING_NEXT_PAGE % {
+								"quantity" : new_revisions_count,
+								"url" : url
+							})
+
+							parsed_article_url = urlparse(article_url)
+
+							next_page_url = self.normalization.normalize_mediawiki_url(
+								parsed_article_url[0] + "://" + parsed_article_url[1] + self.scraper.next_page[0]
+							)
+
+							self.run(next_page_url, 0, last_revision, article_url, 0, True)
+
+						else:
+
+							self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
+								"quantity" : new_revisions_count,
+								"url" : url
+							})
 
 					else:
 
@@ -227,14 +246,13 @@ class Wikimetrics:
 							"url" : url
 						})
 
-				else:
+					if not is_page:
 
-					self.messages.inform(self.messages.NEW_REVISIONS_FOUND % {
-						"quantity" : new_revisions_count,
-						"url" : url
-					})
+						self.mongo.update_last_history_md5(article_url, history_md5)
 
-				self.mongo.update_article_pending_url(article_url, None)
+						self.mongo.update_article_last_update(article_url, int(time()) + 16200) # Wikipedia uses GMT
+
+						self.mongo.update_article_pending_url(article_url, None)					
 
 			elif response_code == 301:
 
@@ -302,3 +320,5 @@ class Wikimetrics:
 			# [Medium] TODO: An error ocurred while doing the request
 
 			pass
+
+		self.mongo.update_article_priority(article_url, 0)

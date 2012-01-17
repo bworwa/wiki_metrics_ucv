@@ -225,8 +225,44 @@ class Mongo:
 
 		if article.count() == 1:
 
-			return article[0]["pending_url"]
+			try:
+
+				return article[0]["pending_url"]
+
+			except KeyError:
+
+				return None
 
 		else:
 
 			return None
+
+	def update_article_priority(self, url, priority):
+
+		self.db.articles.update({ "_id" : url }, { "$set" : { "priority" : priority } } )
+
+	def update_article_last_update(self, url, last_update):
+
+		self.db.articles.update({ "_id" : url }, { "$set" : { "last_update" : last_update } } )
+
+	def get_last_history_md5(self, url):
+
+		article = self.db.articles.find({ "_id" : url }, { "history_md5" : 1 })
+
+		if article.count() == 1:
+
+			try:
+
+				return article[0]["history_md5"]
+
+			except KeyError:
+
+				return None
+
+		else:
+
+			return None
+
+	def update_last_history_md5(self, url, history_md5):
+
+		self.db.articles.update({ "_id" : url }, { "$set" : { "history_md5" : history_md5 } } )
