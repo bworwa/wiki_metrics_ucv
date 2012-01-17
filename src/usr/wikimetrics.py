@@ -18,6 +18,10 @@ from pymongo.errors import DuplicateKeyError
 from usr.mongo import Mongo
 from usr.helpers.normalization import Normalization
 
+class ResolvePendingFailed(Exception):
+
+	pass
+
 class Wikimetrics:
 
 	# TODO: Move to config
@@ -124,13 +128,11 @@ class Wikimetrics:
 
 			if pending_url and pending_url != url:
 
-				self.run(pending_url, 0, 0, url)
+				self.run(pending_url, 0, 0, url, 0, True)
 
-				pending_url = self.mongo.get_pending_url(url)
+				if self.mongo.get_pending_url(url):
 
-				if pending_url:
-
-					return False
+					raise ResolvePendingFailed()
 
 		if last_revision is None:
 
@@ -248,12 +250,14 @@ class Wikimetrics:
 
 					if not is_page:
 
+						if not self.mongo.get_pending_url(article_url):
+
+							self.mongo.update_article_pending_url(article_url, None)
+
 						self.mongo.update_last_history_md5(article_url, history_md5)
 
 						self.mongo.update_article_last_update(article_url, int(time()) + 16200) # Wikipedia uses GMT
-
-						self.mongo.update_article_pending_url(article_url, None)					
-
+					
 			elif response_code == 301:
 
 				# Moved permanently
@@ -262,7 +266,7 @@ class Wikimetrics:
 
 				self.mongo.update_article_url(article_url, new_url)				
 
-				self.run(new_url, last_update, last_revision)
+				self.run(new_url, last_update, last_revision, None, tries, is_page)
 
 			elif response_code in [302, 303, 307]:
 
@@ -270,7 +274,7 @@ class Wikimetrics:
 
 				temporal_url = self.normalization.normalize_mediawiki_url(self.scraper.request.current_headers["location"])
 
-				self.run(temporal_url, last_update, last_revision, article_url)
+				self.run(temporal_url, last_update, last_revision, article_url, tries, is_page)
 
 			elif response_code in [408, 500, 503]:
 
@@ -288,7 +292,7 @@ class Wikimetrics:
 
 						pass
 
-					self.run(url, last_update, last_revision, article_url, tries + 1)
+					self.run(url, last_update, last_revision, article_url, tries + 1, is_page)
 
 				else:
 
