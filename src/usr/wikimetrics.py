@@ -325,4 +325,6 @@ class Wikimetrics:
 
 			pass
 
-		self.mongo.update_article_priority(article_url, 0)
+		if not is_page:
+
+			self.mongo.update_article_priority(article_url, 0)
