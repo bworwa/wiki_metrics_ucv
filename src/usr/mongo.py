@@ -3,6 +3,7 @@
 from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from os.path import abspath, dirname
+from time import time
 
 # External
 from pymongo import Connection
@@ -189,7 +190,7 @@ class Mongo:
 
 	def get_next_article(self):
 
-		article = self.db.articles.find({}, { "_id" : 1, "last_update" : 1 }).sort("priority", -1).limit(1)
+		article = self.db.articles.find({ "priority" : { "$gt" : 0 } }, { "_id" : 1, "last_update" : 1 }).sort("priority", -1).limit(1)
 
 		if article.count(True) == 1:
 
@@ -266,3 +267,16 @@ class Mongo:
 	def update_last_history_md5(self, url, history_md5):
 
 		self.db.articles.update({ "_id" : url }, { "$set" : { "history_md5" : history_md5 } } )
+
+	def batch_update_articles_priority(self):
+
+		articles = self.db.articles.find({ "priority" : { "$lt" : 0.5 } }, { "_id" : 1, "last_update" : 1 })
+
+		if articles.count() > 0:
+
+			for article in articles:
+
+				self.db.articles.update(
+					{ "_id" : article["_id"] },
+					{ "$set" : { "priority" : 1 - (float(article["last_update"] - 16200) / time()) } } # Wikipedia uses GMT
+				)

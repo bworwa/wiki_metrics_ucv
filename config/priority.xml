@@ -1,0 +1,6 @@
+<priority>
+	<!--
+		In seconds
+	-->
+	<time_to_sleep>1</time_to_sleep>
+</priority>

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <messages>
-
 	<!-- Configuration -->
 	<message name="xml_config_io_error">There was a problem while opening/reading the XML configuration file '%(path_to_xml)s'</message>
 	<message name="generic_file_io_error">There was a problem while opening/reading the file '%(path_to_file)s'</message>
@@ -65,4 +64,7 @@
 	<message name="pending_url">URL '%(pending_url)s' is pending for a future visit since it was unreachable. URL '%(article)s' will be ignored</message>
 	<!-- Wikimetrics -->
 
+	<!-- Mongo -->
+	<message name="invalid_time_to_sleep">Time to sleep must be an integer value greater than 0 in '%(path_to_xml)s'</message>
+	<!-- Mongo -->
 </messages>

@@ -256,8 +256,6 @@ class Wikimetrics:
 
 						self.mongo.update_last_history_md5(article_url, history_md5)
 
-						self.mongo.update_article_last_update(article_url, int(time()) + 16200) # Wikipedia uses GMT
-					
 			elif response_code == 301:
 
 				# Moved permanently
@@ -326,5 +324,7 @@ class Wikimetrics:
 			pass
 
 		if not is_page:
+
+			self.mongo.update_article_last_update(article_url, int(time()) + 16200) # Wikipedia uses GMT
 
 			self.mongo.update_article_priority(article_url, 0)
