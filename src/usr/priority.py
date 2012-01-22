@@ -4,6 +4,7 @@ from xml.dom import minidom
 from xml.parsers.expat import ExpatError
 from os.path import abspath, dirname
 from time import sleep
+from threading import Thread
 
 # XCraper
 from core.messages import Messages

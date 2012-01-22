@@ -23,11 +23,13 @@ class Validation:
 
 		# According to http://docs.python.org/reference/lexical_analysis.html#identifiers
 
-		match = search("^[a-z_][a-z0-9_]*$", identifier.lower(), IGNORECASE)
-	
-		if match:
+		if identifier:
 
-			return True
+			match = search("^[a-z_][a-z0-9_]*$", identifier, IGNORECASE)
+	
+			if match:
+
+				return True
 
 		return False
 
@@ -36,14 +38,16 @@ class Validation:
 		# URLs must have the following format to be considered valid URLs
 		# scheme://host[/path[?query][#fragment]]
 
-		parsed_url = urlparse(url)
+		if url:
 
-		if parsed_url[0] and (
-			parsed_url[0] == "http" or parsed_url[0] == "https" or parsed_url[0] == "shttp"
-		) and parsed_url[1]:
+			parsed_url = urlparse(url)
 
-			# That's enough to be considered a valid URL
+			if parsed_url[0] and (
+				parsed_url[0] == "http" or parsed_url[0] == "https" or parsed_url[0] == "shttp"
+			) and parsed_url[1]:
 
-			return True
+				# That's enough to be considered a valid URL
+
+				return True
 
 		return False
