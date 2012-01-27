@@ -37,6 +37,8 @@ class Wikimetrics:
 
 	messages = Messages()
 
+	messages.debug = scraper.messages.debug
+
 	normalization = Normalization()
 
 	def __init__(self, debug_force_config_content = None, debug_force_config_path = None):

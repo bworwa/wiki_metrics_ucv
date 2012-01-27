@@ -9,7 +9,8 @@
 	<message name="empty_xml_tag_attr">The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'</message>
 	<message name="invalid_attr_value">'%(attr_value)s' is not a valid value for attribute '%(attr)s' in '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_value">The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'</message>
-	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')</message>
+	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier '%(path_to_xml)s'</message>
+	<message name="invalid_debug_value">'%(value)s' is an invalid debug value in '%(path_to_xml)s', defaulted to true</message>
 	<!-- Configuration -->
 
 	<!-- XPath -->

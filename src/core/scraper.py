@@ -31,8 +31,13 @@ class Scraper:
 			"utf8",
 			"ascii"
 		],
-		"charset" : None
+		"charset" : None,
+		"debug" : True
 	}
+
+	true_list = ["true", "yes", "y", "1"]
+
+	false_list = ["false", "no", "n", "0"]
 
 	messages = Messages()
 
@@ -116,6 +121,59 @@ class Scraper:
 		user_agent = general.getElementsByTagName("user_agent")
 
 		charset = general.getElementsByTagName("charset")
+
+		debug = general.getElementsByTagName("debug")
+
+		# We 'poke' the variable debug[0] to see if there is a 'debug' tag defined in the XML configuration file
+
+		try:
+
+			debug[0]
+
+		except IndexError:
+
+			# The tag 'debug' is missing, program halted
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "debug",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		# We verify that the 'debug' tag content exists and is not an empty (whitespace) string
+
+		if not debug[0].firstChild or not debug[0].firstChild.nodeValue.strip():
+
+			# 'debug' tag content doesn't exists (empty) or is an empty string (whitespace)
+			# We default to True and issue a warning
+
+			self.messages.issue_warning(self.messages.INVALID_DEBUG_VALUE % {
+				"value" : "",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		else:
+
+			debug = debug[0].firstChild.nodeValue.strip().lower()
+
+			if debug in self.true_list:
+
+				self.config["debug"] = True
+
+			elif debug in self.false_list:
+
+				self.config["debug"] = False
+
+			else:
+
+				# The content of the tag 'debug' is invalid (!= [true | false])
+				# We default to True and issue a warning
+
+				self.messages.issue_warning(self.messages.INVALID_DEBUG_VALUE % {
+					"value" : debug,
+					"path_to_xml" : self.config["path_to_config"]
+				}, self.messages.INTERNAL)
+
+		self.messages.debug = self.config["debug"]
 			
 		# We 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
 
@@ -313,21 +371,21 @@ class Scraper:
 
 					xpath_get_value = xpath_query.getAttribute("get_value").strip().lower()
 
-					if not xpath_get_value or xpath_get_value == "false":
+					if not xpath_get_value or xpath_get_value in self.false_list:
 
-						# If it doesn't exists, it's empty or 'false' we default to False
+						# If it doesn't exists, it's empty or false we default to False
 						# No warnings needed as it is an opcional attribute
 
 						xpath_get_value = False
 
-					elif xpath_get_value == "true":
+					elif xpath_get_value in self.true_list:
 
 						xpath_get_value = True
 
 					else:
 
-						# The content of the attribute 'xpath_get_value' is invalid (!= 'true' | 'false' | empty | '')
-						# We default to false and issue a warning
+						# The content of the attribute 'xpath_get_value' is invalid (!= [true | false | empty | ''])
+						# We default to False and issue a warning
 
 						xpath_get_value = False
 

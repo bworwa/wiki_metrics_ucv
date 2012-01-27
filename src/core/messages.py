@@ -34,6 +34,8 @@ class Messages:
 		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/messages.xml"
 	}
 
+	debug= True
+
 	log = Log()
 
 	validation = Validation()
@@ -123,7 +125,9 @@ class Messages:
 
 		message = "Error: " + message + ".\n"
 
-		stderr.write(message)
+		if self.debug:
+
+			stderr.write(message)
 
 		if log_it:
 
@@ -149,7 +153,9 @@ class Messages:
 
 		message = "Warning: " + message + ".\n"
 
-		stderr.write(message)
+		if self.debug:
+
+			stderr.write(message)
 
 		if log_it:
 
@@ -167,7 +173,9 @@ class Messages:
 
 			message = message + ".\n"
 
-		stdout.write(message)
+		if self.debug:
+
+			stdout.write(message)
 
 		if log_it:
 
