@@ -9,12 +9,6 @@
 			Supported charsets are: "utf8", "ascii"
 		-->
 		<charset>ascii</charset>
-		<!--
-			Console output?
-
-			Options: "true", "false"
-		-->
-		<debug>false</debug>
 	</general>
 	<xpath>
 		<queries hosts="es.wikipedia.org, en.wikipedia.org">

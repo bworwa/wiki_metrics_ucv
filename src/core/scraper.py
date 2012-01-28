@@ -31,8 +31,7 @@ class Scraper:
 			"utf8",
 			"ascii"
 		],
-		"charset" : None,
-		"debug" : True
+		"charset" : None
 	}
 
 	true_list = ["true", "yes", "y", "1"]
@@ -122,59 +121,6 @@ class Scraper:
 
 		charset = general.getElementsByTagName("charset")
 
-		debug = general.getElementsByTagName("debug")
-
-		# We 'poke' the variable debug[0] to see if there is a 'debug' tag defined in the XML configuration file
-
-		try:
-
-			debug[0]
-
-		except IndexError:
-
-			# The tag 'debug' is missing, program halted
-
-			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
-				"xml_tag_name" : "debug",
-				"path_to_xml" : self.config["path_to_config"]
-			}, self.messages.INTERNAL)
-
-		# We verify that the 'debug' tag content exists and is not an empty (whitespace) string
-
-		if not debug[0].firstChild or not debug[0].firstChild.nodeValue.strip():
-
-			# 'debug' tag content doesn't exists (empty) or is an empty string (whitespace)
-			# We default to True and issue a warning
-
-			self.messages.issue_warning(self.messages.INVALID_DEBUG_VALUE % {
-				"value" : "",
-				"path_to_xml" : self.config["path_to_config"]
-			}, self.messages.INTERNAL)
-
-		else:
-
-			debug = debug[0].firstChild.nodeValue.strip().lower()
-
-			if debug in self.true_list:
-
-				self.config["debug"] = True
-
-			elif debug in self.false_list:
-
-				self.config["debug"] = False
-
-			else:
-
-				# The content of the tag 'debug' is invalid (!= [true | false])
-				# We default to True and issue a warning
-
-				self.messages.issue_warning(self.messages.INVALID_DEBUG_VALUE % {
-					"value" : debug,
-					"path_to_xml" : self.config["path_to_config"]
-				}, self.messages.INTERNAL)
-
-		self.messages.debug = self.config["debug"]
-			
 		# We 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
 
 		try:

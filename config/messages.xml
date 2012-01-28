@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <messages>
+	<!--
+		Console output?
+
+		Options: "true", "false"
+	-->
+	<debug>false</debug>
+
 	<!-- Configuration -->
 	<message name="xml_config_io_error">There was a problem while opening/reading the XML configuration file '%(path_to_xml)s'</message>
 	<message name="generic_file_io_error">There was a problem while opening/reading the file '%(path_to_file)s'</message>
@@ -10,7 +17,7 @@
 	<message name="invalid_attr_value">'%(attr_value)s' is not a valid value for attribute '%(attr)s' in '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_value">The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'</message>
 	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier '%(path_to_xml)s'</message>
-	<message name="invalid_debug_value">'%(value)s' is an invalid debug value in '%(path_to_xml)s', defaulted to true</message>
+	<message name="invalid_debug_value">'%(value)s' is an invalid debug value in '%(path_to_xml)s', defaulted to 'true'</message>
 	<!-- Configuration -->
 
 	<!-- XPath -->
