@@ -24,7 +24,7 @@ class Urls:
 
 		pass
 
-	def add_url(self, url = None, path_to_file = None):
+	def add_url(self, url, path_to_file = None):
 
 		if not path_to_file:
 
@@ -44,12 +44,12 @@ class Urls:
 
 				urls_file = open(path_to_file, "r")
 
+				for url in urls_file:
+
+					self.add_url(url.strip())
+
+				urls_file.close()
+
 			except IOError:
 
 				stdout.write("There was a problem while opening/reading the file '" + str(path_to_file) + "'.\n")
-
-			for url in urls_file:
-
-				self.add_url(url.strip())
-
-			urls_file.close()
