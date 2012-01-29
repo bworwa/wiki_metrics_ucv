@@ -103,7 +103,7 @@ class Threads:
 
 		if console_output:
 
-			stdout.write("OK\n")
+			stdout.write("OK.\n")
 
 	def stop_wikimetrics_thread(self, console_output = True):
 
@@ -123,7 +123,7 @@ class Threads:
 
 		if console_output:
 
-			stdout.write("OK\n")
+			stdout.write("OK.\n")
 
 	def stop_all_threads(self):
 
@@ -147,11 +147,11 @@ class Threads:
 
 			self.priority_thread["thread"].start()
 
-			stdout.write("OK\n")
+			stdout.write("OK.\n")
 
 		else:
 
-			stdout.write("thread is already running\n")
+			stdout.write("thread is already running.\n")
 
 	def start_wikimetrics_thread(self):
 
@@ -169,11 +169,11 @@ class Threads:
 
 			self.wikimetrics_thread["thread"].start()
 
-			stdout.write("OK\n")
+			stdout.write("OK.\n")
 
 		else:
 
-			stdout.write("thread is already running\n")
+			stdout.write("thread is already running.\n")
 
 	def start_all_threads(self):
 

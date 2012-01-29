@@ -77,7 +77,7 @@ class Normalization:
 
 				query_string = parse_qs(parsed_url[4])
 
-				if query_string:
+				if query_string and query_string["title"][0]:
 
 					url = self.normalize_mediawiki_url(url)
 
@@ -85,7 +85,7 @@ class Normalization:
 
 					# Only for Wikipedia
 
-					title = urlparse(url)[2].replace("/wiki/", "").strip()
+					title = path.replace("/wiki/", "").strip()
 
 					url = scheme + "://" + host + "/w/index.php?title=" + title + "&action=history"
 

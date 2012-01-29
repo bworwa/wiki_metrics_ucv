@@ -1,6 +1,6 @@
 
-# XCraper
-from core.messages import Messages
+# Native
+from sys import stdout
 
 # User defined
 from usr.mongo import Mongo
@@ -8,15 +8,13 @@ from usr.helpers.normalization import Normalization
 
 class Urls:
 
-	messages = Messages()
-
 	mongo = Mongo()
 
 	normalization = Normalization()
 
 	def __init__(self):
 
-		self.messages.URLS = "urls"
+		# [Low] TODO
 
 		pass
 
@@ -26,7 +24,7 @@ class Urls:
 
 		pass
 
-	def add_url(self, url, path_to_file = None):
+	def add_url(self, url = None, path_to_file = None):
 
 		if not path_to_file:
 
@@ -34,13 +32,11 @@ class Urls:
 
 			if normalized_url:
 
-				print normalized_url
+				self.mongo.insert_new_article(normalized_url)
 
 			else:
 
-				self.messages.issue_warning(self.messages.INVALID_URL % {
-					"url" : url
-				}, self.messages.URLS)
+				stdout.write("URL '" + str(url) + "' is not a valid HTTP/HTTPS/SHTTP URL and will be ignored.\n")
 
 		else:
 
@@ -50,9 +46,7 @@ class Urls:
 
 			except IOError:
 
-				self.messages.raise_error(self.messages.GENERIC_FILE_IO_ERROR % {
-					"path_to_file" : path_to_file
-				}, self.messages.URLS)
+				stdout.write("There was a problem while opening/reading the file '" + str(path_to_file) + "'.\n")
 
 			for url in urls_file:
 
