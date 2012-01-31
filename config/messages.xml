@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <messages>
 	<!--
-		Console output?
+		Scraper class console output? (useful for silent scraping)
+		NOTE: messages will still be logged
 
 		Options: "true", "false"
 	-->
@@ -16,8 +17,8 @@
 	<message name="empty_xml_tag_attr">The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'</message>
 	<message name="invalid_attr_value">'%(attr_value)s' is not a valid value for attribute '%(attr)s' in '%(path_to_xml)s'</message>
 	<message name="empty_xml_tag_value">The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'</message>
-	<message name="invalid_identifier">'%(identifier)s' is an invalid identifier '%(path_to_xml)s'</message>
-	<message name="invalid_debug_value">'%(value)s' is an invalid debug value in '%(path_to_xml)s', defaulted to 'true'</message>
+	<message name="invalid_xml_tag_value">'%(value)s' is an invalid value for tag '%(tag)s' in '%(path_to_xml)s', defaulted to '%(default)s'</message>
+	<message name="invalid_identifier">'%(identifier)s' is an invalid Python identifier in '%(path_to_xml)s'</message>
 	<!-- Configuration -->
 
 	<!-- XPath -->
@@ -75,4 +76,17 @@
 	<!-- Mongo -->
 	<message name="invalid_time_to_sleep">Time to sleep must be an integer value greater than 0 in '%(path_to_xml)s'</message>
 	<!-- Mongo -->
+
+	<!-- Threads -->
+	<message name="starting_thread">Starting %(thread)s thread%(separator)s</message>
+	<message name="stopping_thread">Stopping %(thread)s thread%(separator)s</message>
+	<message name="thread_ok">OK</message>
+	<message name="thread_already_running">thread is already running</message>
+	<message name="thread_status">%(thread)s thread: %(status)s</message>
+	<!-- Threads -->
+
+	<!-- URLs -->
+	<message name="url_added">URL '%(url)s' has been added to the URL pool</message>
+	<message name="url_removed">URL '%(url)s' has been removed from the URL pool</message>
+	<!-- URLs -->
 </messages>

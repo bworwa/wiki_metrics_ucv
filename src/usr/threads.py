@@ -2,7 +2,9 @@
 # Native
 from threading import Thread
 from time import sleep
-from sys import stdout
+
+# XCraper
+from core.messages import Messages
 
 # User defined
 from usr.wikimetrics import Wikimetrics, ResolvePendingFailed
@@ -27,6 +29,8 @@ class Threads:
 		"thread" : None
 	}
 
+	messages = Messages()
+
 	priority = Priority()
 
 	mongo = Mongo()
@@ -34,6 +38,8 @@ class Threads:
 	wikimetrics = Wikimetrics()
 
 	def __init__(self):
+
+		self.messages.THREADS = "threads"
 
 		self.start_all_threads()
 
@@ -89,9 +95,10 @@ class Threads:
 
 		if console_output:
 
-			stdout.write("Stopping priority thread... ")
-
-			stdout.flush()
+			self.messages.inform(self.messages.STOPPING_THREAD % {
+				"thread" : "priority",
+				"separator" : "... "
+			}, False, self.messages.THREADS)
 
 		self.priority_thread["status"] = "stopped"
 
@@ -103,15 +110,16 @@ class Threads:
 
 		if console_output:
 
-			stdout.write("OK.\n")
+			self.messages.inform(self.messages.THREAD_OK, True, self.messages.THREADS)
 
 	def stop_wikimetrics_thread(self, console_output = True):
 
 		if console_output:
 
-			stdout.write("Stopping wikimetrics thread... ")
-
-			stdout.flush()
+			self.messages.inform(self.messages.STOPPING_THREAD % {
+				"thread" : "wikimetrics",
+				"separator" : "... "
+			}, False, self.messages.THREADS)
 
 		self.wikimetrics_thread["status"] = "stopped"
 
@@ -123,7 +131,7 @@ class Threads:
 
 		if console_output:
 
-			stdout.write("OK.\n")
+			self.messages.inform(self.messages.THREAD_OK, True, self.messages.THREADS)
 
 	def stop_all_threads(self):
 
@@ -133,9 +141,10 @@ class Threads:
 
 	def start_priority_thread(self):
 
-		stdout.write("Starting priority thread... ")
-
-		stdout.flush()
+		self.messages.inform(self.messages.STARTING_THREAD % {
+			"thread" : "priority",
+			"separator" : "... "
+		}, False, self.messages.THREADS)
 
 		if not self.priority_thread["status"] == "running":
 
@@ -147,17 +156,18 @@ class Threads:
 
 			self.priority_thread["thread"].start()
 
-			stdout.write("OK.\n")
+			self.messages.inform(self.messages.THREAD_OK, True, self.messages.THREADS)
 
 		else:
 
-			stdout.write("thread is already running.\n")
+			self.messages.inform(self.messages.THREAD_ALREADY_RUNNING, True, self.messages.THREADS)
 
 	def start_wikimetrics_thread(self):
 
-		stdout.write("Starting wikimetrics thread... ")
-
-		stdout.flush()
+		self.messages.inform(self.messages.STARTING_THREAD % {
+			"thread" : "wikimetrics",
+			"separator" : "... "
+		}, False, self.messages.THREADS)
 
 		if not self.wikimetrics_thread["status"] == "running":
 
@@ -169,14 +179,26 @@ class Threads:
 
 			self.wikimetrics_thread["thread"].start()
 
-			stdout.write("OK.\n")
+			self.messages.inform(self.messages.THREAD_OK, True, self.messages.THREADS)
 
 		else:
 
-			stdout.write("thread is already running.\n")
+			self.messages.inform(self.messages.THREAD_ALREADY_RUNNING, True, self.messages.THREADS)
 
 	def start_all_threads(self):
 
 		self.start_priority_thread()
 
 		self.start_wikimetrics_thread()
+
+	def inform_threads_status(self):
+
+		self.messages.inform(self.messages.THREAD_STATUS % {
+			"thread" : "priority",
+			"status" : self.priority_thread["status"]
+		}, True, self.messages.THREADS)
+
+		self.messages.inform(self.messages.THREAD_STATUS % {
+			"thread" : "wikimetrics",
+			"status" : self.wikimetrics_thread["status"]
+		}, True, self.messages.THREADS)

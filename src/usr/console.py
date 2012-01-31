@@ -2,6 +2,7 @@
 # Native
 from os import system
 from sys import stdout
+import readline
 
 # User defined
 from usr.threads import Threads
@@ -82,6 +83,18 @@ Input Options:
 
 				system("clear")
 
+			elif command_list[0] == "daemonize":
+
+				try:
+
+					if command_list[1] == "-p":
+
+						pass
+
+				except IndexError:
+
+					pass
+
 			elif command_list[0] == "exit":
 
 				self.threads.stop_all_threads()
@@ -94,15 +107,15 @@ Input Options:
 
 				try:
 
-					if "-a" in command_list[1]:
+					if command_list[1] == "-a":
 
 						self.threads.start_all_threads()
 
-					elif "-p" in command_list[1]:
+					elif command_list[1] == "-p":
 
 						self.threads.start_priority_thread()
 
-					elif "-w" in command_list[1]:
+					elif command_list[1] == "-w":
 
 						self.threads.start_wikimetrics_thread()
 
@@ -140,9 +153,7 @@ Input Options:
 
 			elif command_list[0] == "tstatus":
 
-				stdout.write("Priority thread: " + self.threads.priority_thread["status"] + ".\n")
-
-				stdout.write("Wikimetrics thread: " + self.threads.wikimetrics_thread["status"] + ".\n")
+				self.threads.inform_threads_status()
 
 			elif command_list[0] == "url":
 
@@ -166,7 +177,19 @@ Input Options:
 
 					elif command_list[1] == "-rm":
 
-						pass
+						try:
+
+							if command_list[2] == "-f":
+
+								self.urls.remove_url(None, command_list[3])
+
+							else:
+
+								self.urls.remove_url(command_list[2])
+
+						except IndexError:
+
+							raise IndexError
 
 					else:
 

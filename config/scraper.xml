@@ -6,6 +6,10 @@
 		-->
 		<user_agent>wiki_metrics_ucv/0.1 (https://github.com/bworwa/wiki_metrics_ucv)</user_agent>
 		<!--
+			Override the sitemap authorization check?
+		-->
+		<override_sitemap>true</override_sitemap>
+		<!--
 			Supported charsets are: "utf8", "ascii"
 		-->
 		<charset>ascii</charset>

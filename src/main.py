@@ -9,7 +9,7 @@ from usr.console import Console
 
 if __name__ == "__main__":
 
-	HEADER = """Wiki Metrics UCV (https://github.com/bworwa/wiki_metrics_ucv)
+	HEADER = """Wiki-Metrics-UCV (https://github.com/bworwa/wiki_metrics_ucv)
 Welcome """ + getuser() + """!
 
 """

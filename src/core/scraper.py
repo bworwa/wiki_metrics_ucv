@@ -27,6 +27,7 @@ class Scraper:
 		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/scraper.xml",
 		"xpath_queries" : {},
 		"user_agent" : None,
+		"override_sitemap" : False,
 		"supported_charsets" : [
 			"utf8",
 			"ascii"
@@ -115,9 +116,11 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		# We get the 'user_agent' and 'charset' tag from the general node
+		# We get the 'user_agent', 'override_sitemap' and 'charset' tags from the general node
 
 		user_agent = general.getElementsByTagName("user_agent")
+
+		override_sitemap = general.getElementsByTagName("override_sitemap")
 
 		charset = general.getElementsByTagName("charset")
 
@@ -148,6 +151,59 @@ class Scraper:
 			}, self.messages.INTERNAL)
 
 		self.config["user_agent"] = user_agent[0].firstChild.nodeValue.strip()
+
+		# We 'poke' the variable override_sitemap[0] to see if there is a 'override_sitemap' tag defined in the XML configuration file
+
+		try:
+
+			override_sitemap[0]
+
+		except IndexError:
+
+			# The tag 'override_sitemap' is missing, program halted
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "override_sitemap",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		# We verify that the 'override_sitemap' tag content exists and is not an empty (whitespace) string
+
+		if not override_sitemap[0].firstChild or not override_sitemap[0].firstChild.nodeValue.strip():
+
+			# 'user_agent' tag content doesn't exists (empty) or is an empty string (whitespace)
+			# We default to False and issue a warning
+
+				self.messages.issue_warning(self.messages.INVALID_XML_TAG_VALUE % {
+					"value" : "",
+					"tag" : "override_sitemap",
+					"path_to_xml" : self.config["path_to_config"],
+					"default" : self.config["override_sitemap"]
+				}, self.messages.INTERNAL)
+
+		else:
+
+			override_sitemap = override_sitemap[0].firstChild.nodeValue.strip().lower()
+
+			if override_sitemap in self.true_list:
+
+				self.config["override_sitemap"] = True
+
+			elif override_sitemap in self.false_list:
+
+				pass
+
+			else:
+
+				# The content of the tag 'override_sitemap' is invalid (!= [true | false])
+				# We default to False and issue a warning
+
+				self.messages.issue_warning(self.messages.INVALID_XML_TAG_VALUE % {
+					"value" : override_sitemap,
+					"tag" : "override_sitemap",
+					"path_to_xml" : self.config["path_to_config"],
+					"default" : self.config["override_sitemap"]
+				}, self.messages.INTERNAL)
 
 		# We 'poke' the variable charset[0] to see if there is a 'charset' tag defined in the XML configuration file
 
@@ -488,7 +544,7 @@ class Scraper:
 
 		try:
 
-			if not self.request.knock(self.config["user_agent"], url, True):
+			if not self.request.knock(self.config["user_agent"], url, self.config["override_sitemap"]):
 
 				# The host has explicitly specified that he doesn't want us to fetch this URL
 

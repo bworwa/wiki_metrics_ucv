@@ -23,8 +23,8 @@ class Messages:
 	XML_TAG_MISSING		= "'%(xml_tag_name)s' tag is missing in the XML configuration file '%(path_to_xml)s'"
 	EMPTY_XML_TAG_ATTR	= "The tag attribute '%(xml_tag_attr)s' cannot be empty in '%(path_to_xml)s'"
 	EMPTY_XML_TAG_VALUE	= "The tag '%(xml_tag_name)s' cannot be empty in '%(path_to_xml)s'"
+	INVALID_XML_TAG_VALUE	= "'%(value)s' is an invalid value for tag '%(tag)s' in '%(path_to_xml)s', defaulted to '%(default)s'"
 	INVALID_IDENTIFIER	= "'%(identifier)s' is an invalid identifier ('%(path_to_xml)s')"
-	INVALID_DEBUG_VALUE	= "'%(value)s' is an invalid debug value in '%(path_to_xml)s', defaulted to 'true'"
 
 	"""Log's subdirectories constants"""
 
@@ -33,7 +33,7 @@ class Messages:
 
 	config = {
 		"path_to_config" : dirname(dirname(dirname(abspath(__file__)))) + "/config/messages.xml",
-		"debug" : True
+		"debug" : False
 	}
 
 	true_list = ["true", "yes", "y", "1"]
@@ -109,11 +109,13 @@ class Messages:
 		if not debug[0].firstChild or not debug[0].firstChild.nodeValue.strip():
 
 			# 'debug' tag content doesn't exists (empty) or is an empty string (whitespace)
-			# We default to True and issue a warning
+			# We default to False and issue a warning
 
-			self.issue_warning(self.INVALID_DEBUG_VALUE % {
+			self.issue_warning(self.INVALID_XML_TAG_VALUE % {
 				"value" : "",
-				"path_to_xml" : self.config["path_to_config"]
+				"tag" : "debug",
+				"path_to_xml" : self.config["path_to_config"],
+				"default" : self.config["debug"]
 			}, self.INTERNAL)
 
 		else:
@@ -126,16 +128,18 @@ class Messages:
 
 			elif debug in self.false_list:
 
-				self.config["debug"] = False
+				pass
 
 			else:
 
 				# The content of the tag 'debug' is invalid (!= [true | false])
-				# We default to True and issue a warning
+				# We default to False and issue a warning
 
-				self.issue_warning(self.INVALID_DEBUG_VALUE % {
+				self.issue_warning(self.INVALID_XML_TAG_VALUE % {
 					"value" : debug,
-					"path_to_xml" : self.config["path_to_config"]
+					"tag" : "debug",
+					"path_to_xml" : self.config["path_to_config"],
+					"default" : self.config["debug"]
 				}, self.INTERNAL)
 
 		# We 'poke' the variable messages[0] to see if there is a 'message' tag defined in the XML configuration file
@@ -188,9 +192,11 @@ class Messages:
 
 		message = "Error: " + message + ".\n"
 
-		if self.config["debug"]:
+		if self.config["debug"] or not section == self.SCRAPER:
 
 			stderr.write(message)
+
+			stderr.flush()
 
 		if log_it:
 
@@ -216,9 +222,11 @@ class Messages:
 
 		message = "Warning: " + message + ".\n"
 
-		if self.config["debug"]:
+		if self.config["debug"] or not section == self.SCRAPER:
 
 			stderr.write(message)
+
+			stderr.flush()
 
 		if log_it:
 
@@ -236,9 +244,11 @@ class Messages:
 
 			message = message + ".\n"
 
-		if self.config["debug"]:
+		if self.config["debug"] or not section == self.SCRAPER:
 
 			stdout.write(message)
+
+			stdout.flush()
 
 		if log_it:
 
