@@ -85,62 +85,7 @@ class Messages:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.INTERNAL)
 
-		debug = root.getElementsByTagName("debug")
-
 		messages = root.getElementsByTagName("message")
-
-		# We 'poke' the variable debug[0] to see if there is a 'debug' tag defined in the XML configuration file
-
-		try:
-
-			debug[0]
-
-		except IndexError:
-
-			# The tag 'debug' is missing, program halted
-
-			self.raise_error(self.XML_TAG_MISSING % {
-				"xml_tag_name" : "debug",
-				"path_to_xml" : self.config["path_to_config"]
-			}, self.INTERNAL)
-
-		# We verify that the 'debug' tag content exists and is not an empty (whitespace) string
-
-		if not debug[0].firstChild or not debug[0].firstChild.nodeValue.strip():
-
-			# 'debug' tag content doesn't exists (empty) or is an empty string (whitespace)
-			# We default to False and issue a warning
-
-			self.issue_warning(self.INVALID_XML_TAG_VALUE % {
-				"value" : "",
-				"tag" : "debug",
-				"path_to_xml" : self.config["path_to_config"],
-				"default" : self.config["debug"]
-			}, self.INTERNAL)
-
-		else:
-
-			debug = debug[0].firstChild.nodeValue.strip().lower()
-
-			if debug in self.true_list:
-
-				self.config["debug"] = True
-
-			elif debug in self.false_list:
-
-				pass
-
-			else:
-
-				# The content of the tag 'debug' is invalid (!= [true | false])
-				# We default to False and issue a warning
-
-				self.issue_warning(self.INVALID_XML_TAG_VALUE % {
-					"value" : debug,
-					"tag" : "debug",
-					"path_to_xml" : self.config["path_to_config"],
-					"default" : self.config["debug"]
-				}, self.INTERNAL)
 
 		# We 'poke' the variable messages[0] to see if there is a 'message' tag defined in the XML configuration file
 

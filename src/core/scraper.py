@@ -116,13 +116,15 @@ class Scraper:
 				"path_to_xml" : self.config["path_to_config"]
 			}, self.messages.INTERNAL)
 
-		# We get the 'user_agent', 'override_sitemap' and 'charset' tags from the general node
+		# We get the 'user_agent', 'override_sitemap', 'charset' and 'debug' tags from the general node
 
 		user_agent = general.getElementsByTagName("user_agent")
 
 		override_sitemap = general.getElementsByTagName("override_sitemap")
 
 		charset = general.getElementsByTagName("charset")
+
+		debug = root.getElementsByTagName("debug")
 
 		# We 'poke' the variable user_agent[0] to see if there is a 'user_agent' tag defined in the XML configuration file
 
@@ -241,6 +243,59 @@ class Scraper:
 				"charset" : self.config["charset"],
 				"supported_charsets" : repr(self.config["supported_charsets"])
 			}, self.messages.INTERNAL)
+
+		# We 'poke' the variable debug[0] to see if there is a 'debug' tag defined in the XML configuration file
+
+		try:
+
+			debug[0]
+
+		except IndexError:
+
+			# The tag 'debug' is missing, program halted
+
+			self.messages.raise_error(self.messages.XML_TAG_MISSING % {
+				"xml_tag_name" : "debug",
+				"path_to_xml" : self.config["path_to_config"]
+			}, self.messages.INTERNAL)
+
+		# We verify that the 'debug' tag content exists and is not an empty (whitespace) string
+
+		if not debug[0].firstChild or not debug[0].firstChild.nodeValue.strip():
+
+			# 'debug' tag content doesn't exists (empty) or is an empty string (whitespace)
+			# We default to False and issue a warning
+
+			self.messages.issue_warning(self.messages.INVALID_XML_TAG_VALUE % {
+				"value" : "",
+				"tag" : "debug",
+				"path_to_xml" : self.config["path_to_config"],
+				"default" : self.config["debug"]
+			}, self.messages.INTERNAL)
+
+		else:
+
+			debug = debug[0].firstChild.nodeValue.strip().lower()
+
+			if debug in self.true_list:
+
+				self.messages.config["debug"] = True
+
+			elif debug in self.false_list:
+
+				pass
+
+			else:
+
+				# The content of the tag 'debug' is invalid (!= [true | false])
+				# We default to False and issue a warning
+
+				self.messages.issue_warning(self.messages.INVALID_XML_TAG_VALUE % {
+					"value" : debug,
+					"tag" : "debug",
+					"path_to_xml" : self.config["path_to_config"],
+					"default" : self.config["debug"]
+				}, self.messages.INTERNAL)
 
 		# We try to get the 'xpath' node from the root node
 
