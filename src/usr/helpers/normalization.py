@@ -85,9 +85,7 @@ class Normalization:
 
 					# Only for Wikipedia
 
-					title = path.replace("/wiki/", "").strip()
-
-					url = scheme + "://" + host + "/w/index.php?title=" + title + "&action=history"
+					url = scheme + "://" + host + "/w/index.php?title=" + path.replace("/wiki/", "").strip() + "&action=history"
 
 				return url
 

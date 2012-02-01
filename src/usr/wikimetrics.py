@@ -5,6 +5,7 @@ from xml.parsers.expat import ExpatError
 from os.path import abspath, dirname
 from urlparse import urlparse, parse_qs
 from time import strptime, mktime, sleep, time
+from locale import LC_TIME, getlocale, setlocale
 import md5
 
 # XCraper
@@ -186,10 +187,24 @@ class Wikimetrics:
 
 								size = "".join(list(number for number in self.scraper.size[index] if number.isdigit()))
 
+								try:
+
+									date = mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y"))
+
+								except ValueError:
+
+									# Spanish Wikipedia fix
+
+									setlocale(LC_TIME, "es_VE.UTF-8")
+
+									date = mktime(strptime(self.scraper.date[index], "%H:%M %d %b %Y"))
+
+									setlocale(LC_TIME, "en_US.UTF-8")
+
 								revision = {
 									"_id" : mediawiki_id,
 									"article" : article_url,
-									"date" : mktime(strptime(self.scraper.date[index], "%H:%M, %d %B %Y")),
+									"date" : date,
 									"user" : self.scraper.user[index],
 									"minor" : True if self.scraper.minor[index] else False,
 									"size" :  int(size) if size else 0,
