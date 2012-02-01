@@ -41,8 +41,6 @@ class Threads:
 
 		self.messages.THREADS = "threads"
 
-		self.start_all_threads()
-
 	def __del__(self):
 
 		# [Low] TODO

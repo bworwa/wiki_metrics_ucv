@@ -1,8 +1,10 @@
 
 # Native
 from os import system
-from sys import stdout
 import readline
+
+# XCraper
+from core.messages import Messages
 
 # User defined
 from usr.threads import Threads
@@ -10,50 +12,9 @@ from usr.urls import Urls
 
 class Console:
 
-	COMMANDS = """Allowed commands:
-
-General commands:
-
-    clear:			clears the screen.
-    exit:			stops all threads and halts the execution.
-    start -[ a | p | w ]:	starts the specified thread(s).
-    stop -[ a | p | w ]:	stops the specified thread(s).
-    tstatus:			shows all threads status.
-    url -[ add | rm ] [ URL ]:	adds or removes the specified URL(s).
-"""
-
-	START_OPTIONS = """Allowed options:
-
-General Options:
-
-    a:	starts all the threads.
-    p:	starts the priority thread.
-    w:	starts the wikimetrics thread.
-"""
-
-	STOP_OPTIONS = """Allowed options:
-
-General Options:
-
-    a:	stops all the threads.
-    p:	stops the priority thread.
-    w:	stops the wikimetrics thread.
-"""
-
-	URL_OPTIONS = """Allowed options:
-
-General Options:
-
-    -add:	adds the specified URL(s).
-    -rm:	removes the specified URL(s).
-
-Input Options:
-
-    URL:		a valid HTTP/HTTPS/SHTTP URL.
-    -f file.ext:	a file containing a set of 'URL', one per line.
-"""
-
 	status = "stopped"
+
+	messages = Messages()
 
 	threads = Threads()
 
@@ -62,6 +23,8 @@ Input Options:
 	def __init__(self):
 
 		self.status = "running"
+
+		self.threads.start_all_threads()
 
 		pass
 
@@ -83,25 +46,13 @@ Input Options:
 
 				system("clear")
 
-			elif command_list[0] == "daemonize":
-
-				try:
-
-					if command_list[1] == "-p":
-
-						pass
-
-				except IndexError:
-
-					pass
-
 			elif command_list[0] == "exit":
 
 				self.threads.stop_all_threads()
 
 				self.status = "stopped"
 
-				stdout.write("Bye!\n")
+				self.messages.inform(self.messages.CONSOLE_BYE, True, None, False)
 
 			elif command_list[0] == "start":
 
@@ -125,7 +76,7 @@ Input Options:
 
 				except IndexError:
 
-					stdout.write(self.START_OPTIONS)
+					self.messages.inform(self.messages.CONSOLE_START_OPTIONS, True, None, False)
 
 			elif command_list[0] == "stop":
 
@@ -149,7 +100,7 @@ Input Options:
 
 				except IndexError:
 
-					stdout.write(self.STOP_OPTIONS)
+					self.messages.inform(self.messages.CONSOLE_STOP_OPTIONS, True, None, False)
 
 			elif command_list[0] == "tstatus":
 
@@ -197,11 +148,11 @@ Input Options:
 
 				except IndexError:
 
-					stdout.write(self.URL_OPTIONS)
+					self.messages.inform(self.messages.CONSOLE_URL_OPTIONS, True, None, False)
 
 			else:
 
-				stdout.write(self.COMMANDS)
+				self.messages.inform(self.messages.CONSOLE_COMMANDS, True, None, False)
 
 		except IndexError:
 

@@ -26,25 +26,27 @@ class Log:
 
 	def log_this(self, message, section):
 
-		"""
-			Logs the current [message] in the directory /logs/[section]/[current_date].log.
-			If [section] does not exist it is automatically created
-		"""
+		if section and isinstance(section, str):
 
-		self.current_path_to_log = self.BASE_PATH_TO_LOG + "/" + section
+			"""
+				Logs the current [message] in the directory /logs/[section]/[current_date].log.
+				If [section] does not exist it is automatically created
+			"""
 
-		if not exists(self.current_path_to_log):
+			self.current_path_to_log = self.BASE_PATH_TO_LOG + "/" + section
 
-			makedirs(self.current_path_to_log)
+			if not exists(self.current_path_to_log):
 
-		now = datetime.now()
+				makedirs(self.current_path_to_log)
 
-		self.current_path_to_log = (self.current_path_to_log + "/%d-%d-%d.log") % (now.day, now.month, now.year)
+			now = datetime.now()
 
-		message = ("[%d:%d:%d] " + message) % (now.hour, now.minute, now.second)
+			self.current_path_to_log = (self.current_path_to_log + "/%d-%d-%d.log") % (now.day, now.month, now.year)
 
-		log = open(self.current_path_to_log, "a")
+			message = ("[%d:%d:%d] " + message) % (now.hour, now.minute, now.second)
 
-		log.write(message)
+			log = open(self.current_path_to_log, "a")
 
-		log.close()
+			log.write(message)
+
+			log.close()

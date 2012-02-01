@@ -270,7 +270,7 @@ class Scraper:
 				"value" : "",
 				"tag" : "debug",
 				"path_to_xml" : self.config["path_to_config"],
-				"default" : self.config["debug"]
+				"default" : self.messages.config["debug"]
 			}, self.messages.INTERNAL)
 
 		else:
@@ -294,7 +294,7 @@ class Scraper:
 					"value" : debug,
 					"tag" : "debug",
 					"path_to_xml" : self.config["path_to_config"],
-					"default" : self.config["debug"]
+					"default" : self.messages.config["debug"]
 				}, self.messages.INTERNAL)
 
 		# We try to get the 'xpath' node from the root node

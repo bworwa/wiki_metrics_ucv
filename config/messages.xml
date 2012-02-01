@@ -81,4 +81,74 @@
 	<message name="url_added">URL '%(url)s' has been added to the URL pool</message>
 	<message name="url_removed">URL '%(url)s' has been removed from the URL pool</message>
 	<!-- URLs -->
+
+	<!-- Console -->
+	<message name="console_bye">Bye</message>
+	<message name="console_commands">
+Allowed commands:
+
+General commands:
+
+    clear:			clears the screen.
+    exit:			stops all threads and halts the execution.
+    start -[ a | p | w ]:	starts the specified thread(s).
+    stop -[ a | p | w ]:	stops the specified thread(s).
+    tstatus:			shows all threads status.
+    url -[ add | rm ] [ URL ]:	adds or removes the specified URL(s).
+	</message>
+	<message name="console_start_options">
+Allowed options:
+
+General Options:
+
+    a:	starts all the threads.
+    p:	starts the priority thread.
+    w:	starts the wikimetrics thread.
+	</message>
+	<message name="console_stop_options">
+Allowed options:
+
+General Options:
+
+    a:	stops all the threads.
+    p:	stops the priority thread.
+    w:	stops the wikimetrics thread.
+	</message>
+	<message name="console_url_options">
+Allowed options:
+
+General Options:
+
+    -add:	adds the specified URL(s).
+    -rm:	removes the specified URL(s).
+
+Input Options:
+
+    URL:		a valid HTTP/HTTPS/SHTTP URL.
+    -f file.ext:	a file containing a set of 'URL', one per line.
+	</message>
+	<!-- Console -->
+
+	<!-- Main -->
+	<message name="main_header">
+Wiki-Metrics-UCV (https://github.com/bworwa/wiki_metrics_ucv)
+Welcome %(user)s
+	</message>
+	<message name="main_options">
+Allowed options:
+
+General Options:
+
+    c:		starts the application as a console application.
+    d -options:	starts the application as a daemon application.
+	</message>
+	<message name="main_daemon_options">
+Allowed options:
+
+General Options:
+
+    start:	starts the daemonized application.
+    stop:	stops the daemonized application.
+	</message>
+	<!-- Main -->
 </messages>
