@@ -24,8 +24,6 @@ class Console:
 
 		self.status = "running"
 
-		self.threads.start_all_threads()
-
 		pass
 
 	def __del__(self):

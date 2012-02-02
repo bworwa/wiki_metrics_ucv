@@ -147,8 +147,20 @@ Allowed options:
 
 General Options:
 
-    start:	starts the daemonized application.
-    stop:	stops the daemonized application.
+    -start -[ a | p | w ]:	starts the specified daemonized application.
+    -stop -[ a | p | w ]:	stops the specified daemonized application.
+
+Applications:
+
+    a:	wikimetrics &amp; priority applications.
+    p:	priority application.
+    w:	wikimetrics application.
 	</message>
 	<!-- Main -->
+
+	<!-- Daemon -->
+	<message name="daemon_fork_failed">Fork #%(number)d failed: %(errno)d (%(error)s)</message>
+	<message name="daemon_already_running">File '%(pid_file)s' already exists. If the daemon is already running stop it first, otherwise delete the .pid file manually</message>
+	<message name="daemon_not_running">File '%(pid_file)s' does not exists. If the daemon is indeed running please kill it manually</message>
+	<!-- Daemon -->
 </messages>

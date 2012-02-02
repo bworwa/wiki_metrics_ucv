@@ -10,18 +10,7 @@ from core.messages import Messages
 
 # User defined
 from usr.console import Console
-from usr.threads import Threads
-from usr.daemon import Daemon
-
-class _Daemon(Daemon):
-
-	def run(self):
-
-		threads = Threads()
-
-		threads.start_priority_thread()
-
-		threads.start_wikimetrics_thread()
+from usr.daemon import Daemon, Priority_Daemon, Wikimetrics_Daemon
 
 if __name__ == "__main__":
 
@@ -45,17 +34,51 @@ if __name__ == "__main__":
 
 		elif argv[1] == "-d":
 
-			_daemon = _Daemon(dirname(dirname(abspath(__file__))) + "/tmp/daemon.pid")
+			priority_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/priority_daemon.pid"
+
+			wikimetrics_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/wikimetrics_daemon.pid"
 
 			try:
 
-				if argv[2] == "-start":					
+				if argv[2] == "-start":
+
+					if argv[3] == "-a":
 			
-					_daemon.start()
+						Priority_Daemon(priority_daemon_pid_file_path).start()
+
+						Wikimetrics_Daemon(wikimetrics_daemon_pid_file_path).start()
+
+					elif argv[3] == "-p":
+
+						Priority_Daemon(priority_daemon_pid_file_path).start()
+
+					elif argv[3] == "-w":
+
+						Wikimetrics_Daemon(wikimetrics_daemon_pid_file_path).start()
+
+					else:
+
+						raise IndexError
 
 				elif argv[2] == "-stop":
 
-					_daemon.stop()
+					if argv[3] == "-a":
+			
+						Daemon(priority_daemon_pid_file_path).stop()
+
+						Daemon(wikimetrics_daemon_pid_file_path).stop()
+
+					elif argv[3] == "-p":
+
+						Daemon(priority_daemon_pid_file_path).stop()
+
+					elif argv[3] == "-w":
+
+						Daemon(wikimetrics_daemon_pid_file_path).stop()
+
+					else:
+
+						raise IndexError
 
 				else:
 
