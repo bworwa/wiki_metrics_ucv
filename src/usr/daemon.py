@@ -8,7 +8,7 @@ from os import fork, chdir, setsid, umask, dup2, getpid, kill, remove
 from os.path import exists
 from sys import stderr, stdin, stdout, exit
 from errno import ESRCH
-from signal import SIGTERM
+from signal import signal, SIGTERM
 from time import sleep
 
 # User defined
@@ -25,15 +25,15 @@ class Daemon:
 
 	messages = Messages()
 
-	def __init__(self, pid_file, stdin='/dev/null', stdout='/dev/null', stderr='/dev/null'):
-
-		self.stdin = stdin
-
-		self.stdout = stdout
-
-		self.stderr = stderr
+	def __init__(self, pid_file, usr_stdin = "/dev/null", usr_stdout = "/dev/null", usr_stderr = "/dev/null"):
 
 		self.pid_file = pid_file
+
+		self.stderr = usr_stderr
+
+		self.stdin = usr_stdin
+
+		self.stdout = usr_stdout
 
 		self.messages.DAEMONS = "daemons"
 	
@@ -44,6 +44,10 @@ class Daemon:
 		Programming in the UNIX Environment" for details (ISBN 0201563177)
 		Http://www.erlenstar.demon.co.uk/unix/faq_2.html#SEC16
 		"""
+
+		self.messages.inform(self.messages.STARTING_DAEMON % {
+			"separator" : "... "
+		}, False, self.messages.DAEMONS)
 
 		try:
 
@@ -91,23 +95,25 @@ class Daemon:
 				"error" : error.strerror
 			}, self.messages.DAEMONS)
 
-		# Redirect standard file descriptors
+		self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
+
+		# Redirect the standard file descriptors
+
+		stderr.flush()
 
 		stdout.flush()
 
-		stderr.flush()
+		stderr_file = file(self.stderr, 'a+', 0)
 
 		stdin_file = file(self.stdin, 'r')
 
 		stdout_file = file(self.stdout, 'a+')
 
-		stderr_file = file(self.stderr, 'a+', 0)
+		dup2(stderr_file.fileno(), stderr.fileno())
 
 		dup2(stdin_file.fileno(), stdin.fileno())
 
 		dup2(stdout_file.fileno(), stdout.fileno())
-
-		dup2(stderr_file.fileno(), stderr.fileno())
 
 		# Create/write .pid file
 
@@ -133,23 +139,33 @@ class Daemon:
 
 			pid = None
 
+		except TypeError:
+
+			pid = None
+
 		if pid:
 
-			self.messages.raise_error(self.messages.DAEMON_ALREADY_RUNNING % {
-				"pid_file" : self.pid_file
-			}, self.messages.DAEMONS)
+			self.messages.inform(self.messages.DAEMON_ALREADY_RUNNING % {
+				"pid" : pid
+			}, True, self.messages.DAEMONS)
 
-		# Start the daemon
+		else:
 
-		self.daemonize()
+			# Start the daemon
 
-		self.run()
+			self.daemonize()
+
+			self.run()
 
 	def stop(self):
 
 		"""
 		Stop the daemon
 		"""
+
+		self.messages.inform(self.messages.STOPPING_DAEMON % {
+			"separator" : "... "
+		}, False, self.messages.DAEMONS)
 
 		# Get the pid from the .pid file
 
@@ -165,12 +181,6 @@ class Daemon:
 
 			pid = None
 
-		if not pid:
-
-			self.messages.raise_error(self.messages.DAEMON_NOT_RUNNING % {
-				"pid_file" : self.pid_file
-			}, self.messages.DAEMONS)
-
 		# Try killing the daemon process
 
 		try:
@@ -183,6 +193,8 @@ class Daemon:
 
 			remove(self.pid_file)
 
+			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
+
 		except OSError, error:
 
 			if error.errno == ESRCH:
@@ -191,18 +203,34 @@ class Daemon:
 
 					remove(self.pid_file)
 
+					self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
+
 			else:
 
 				self.messages.raise_error(error.strerror, self.messages.DAEMONS)
 
+		except TypeError:
+
+			# There was no .pid file or pid was not an integer. We asume that the daemon is not running
+
+			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
+
 class Priority_Daemon(Daemon):
+
+	threads = Threads()
 
 	def run(self):
 
-		Threads().start_priority_thread()
+		#signal(SIGTERM, self.threads.stop_priority_thread)
+
+		self.threads.start_priority_thread()
 
 class Wikimetrics_Daemon(Daemon):
 
+	threads = Threads()
+
 	def run(self):
 
-		Threads().start_wikimetrics_thread()
+		#signal(SIGTERM, self.threads.stop_wikimetrics_thread)
+
+		self.threads.start_wikimetrics_thread()

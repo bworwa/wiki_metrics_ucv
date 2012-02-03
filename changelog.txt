@@ -1,0 +1,6 @@
+v1.0.1
+	- Fixed an issue related to dates formats.
+	- Refactored the Daemon class.
+	- Disabled daemon mode until further notice to avoid data corruption.
+v1.0.0
+	- Version 1.0.0

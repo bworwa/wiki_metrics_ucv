@@ -3,7 +3,7 @@
 from os import system
 from os.path import abspath, dirname
 from getpass import getuser
-from sys import argv
+from sys import argv, exit
 
 # XCraper
 from core.messages import Messages
@@ -14,6 +14,10 @@ from usr.daemon import Daemon, Priority_Daemon, Wikimetrics_Daemon
 
 if __name__ == "__main__":
 
+	priority_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/priority_daemon.pid"
+
+	wikimetrics_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/wikimetrics_daemon.pid"
+
 	messages = Messages()
 
 	try:
@@ -22,7 +26,7 @@ if __name__ == "__main__":
 
 			system("clear")
 
-			console = Console()
+			console = Console(priority_daemon_pid_file_path, wikimetrics_daemon_pid_file_path)
 
 			messages.inform(messages.MAIN_HEADER % {
 				"user" : getuser()
@@ -34,9 +38,9 @@ if __name__ == "__main__":
 
 		elif argv[1] == "-d":
 
-			priority_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/priority_daemon.pid"
+			# Disabled daemon mode until further notice to avoid data corruption
 
-			wikimetrics_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/wikimetrics_daemon.pid"
+			exit(0)
 
 			try:
 

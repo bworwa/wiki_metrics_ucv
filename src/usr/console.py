@@ -9,6 +9,7 @@ from core.messages import Messages
 # User defined
 from usr.threads import Threads
 from usr.urls import Urls
+from usr.daemon import Daemon
 
 class Console:
 
@@ -20,9 +21,13 @@ class Console:
 
 	urls = Urls()
 
-	def __init__(self):
+	def __init__(self, priority_daemon_pid_file_path, wikimetrics_daemon_pid_file_path):
 
 		self.status = "running"
+
+		self.priority_daemon_pid_file_path = priority_daemon_pid_file_path
+
+		self.wikimetrics_daemon_pid_file_path = wikimetrics_daemon_pid_file_path
 
 		pass
 
@@ -34,124 +39,142 @@ class Console:
 
 	def run(self):
 
-		command = raw_input(">>> ")
-
-		command_list = command.split()
-
 		try:
 
-			if command_list[0] == "clear":
+			command = raw_input(">>> ")
 
-				system("clear")
+			command_list = command.split()
 
-			elif command_list[0] == "exit":
+			try:
 
-				self.threads.stop_all_threads()
+				if command_list[0] == "clear":
 
-				self.status = "stopped"
+					system("clear")
 
-				self.messages.inform(self.messages.CONSOLE_BYE, True, None, False)
+				elif command_list[0] == "exit":
 
-			elif command_list[0] == "start":
+					self.threads.stop_all_threads()
 
-				try:
+					self.status = "stopped"
 
-					if command_list[1] == "-a":
+					self.messages.inform(self.messages.CONSOLE_BYE, True, None, False)
 
-						self.threads.start_all_threads()
+				elif command_list[0] == "start":
 
-					elif command_list[1] == "-p":
+					try:
 
-						self.threads.start_priority_thread()
+						if command_list[1] == "-a":
 
-					elif command_list[1] == "-w":
+							Daemon(self.priority_daemon_pid_file_path).stop()
+						
+							Daemon(self.wikimetrics_daemon_pid_file_path).stop()
 
-						self.threads.start_wikimetrics_thread()
+							self.threads.start_all_threads()
 
-					else:
+						elif command_list[1] == "-p":
 
-						raise IndexError
+							Daemon(self.priority_daemon_pid_file_path).stop()
 
-				except IndexError:
+							self.threads.start_priority_thread()
 
-					self.messages.inform(self.messages.CONSOLE_START_OPTIONS, True, None, False)
+						elif command_list[1] == "-w":
 
-			elif command_list[0] == "stop":
+							Daemon(self.wikimetrics_daemon_pid_file_path).stop()
 
-				try:
+							self.threads.start_wikimetrics_thread()
 
-					if command_list[1] == "-a":
-
-						self.threads.stop_all_threads()
-
-					elif command_list[1] == "-p":
-
-						self.threads.stop_priority_thread()
-
-					elif command_list[1] == "-w":
-
-						self.threads.stop_wikimetrics_thread()
-
-					else:
-
-						raise IndexError
-
-				except IndexError:
-
-					self.messages.inform(self.messages.CONSOLE_STOP_OPTIONS, True, None, False)
-
-			elif command_list[0] == "tstatus":
-
-				self.threads.inform_threads_status()
-
-			elif command_list[0] == "url":
-
-				try:
-
-					if command_list[1] == "-add":
-
-						try:
-
-							if command_list[2] == "-f":
-
-								self.urls.add_url(None, command_list[3])
-
-							else:
-
-								self.urls.add_url(command_list[2])
-
-						except IndexError:
+						else:
 
 							raise IndexError
 
-					elif command_list[1] == "-rm":
+					except IndexError:
 
-						try:
+						self.messages.inform(self.messages.CONSOLE_START_OPTIONS, True, None, False)
 
-							if command_list[2] == "-f":
+				elif command_list[0] == "stop":
 
-								self.urls.remove_url(None, command_list[3])
+					try:
 
-							else:
+						if command_list[1] == "-a":
 
-								self.urls.remove_url(command_list[2])
+							self.threads.stop_all_threads()
 
-						except IndexError:
+						elif command_list[1] == "-p":
+
+							self.threads.stop_priority_thread()
+
+						elif command_list[1] == "-w":
+
+							self.threads.stop_wikimetrics_thread()
+
+						else:
 
 							raise IndexError
 
-					else:
+					except IndexError:
 
-						raise IndexError
+						self.messages.inform(self.messages.CONSOLE_STOP_OPTIONS, True, None, False)
 
-				except IndexError:
+				elif command_list[0] == "tstatus":
 
-					self.messages.inform(self.messages.CONSOLE_URL_OPTIONS, True, None, False)
+					self.threads.inform_threads_status()
 
-			else:
+				elif command_list[0] == "url":
 
-				self.messages.inform(self.messages.CONSOLE_COMMANDS, True, None, False)
+					try:
 
-		except IndexError:
+						if command_list[1] == "-add":
 
-			pass
+							try:
+
+								if command_list[2] == "-f":
+
+									self.urls.add_url(None, command_list[3])
+
+								else:
+
+									self.urls.add_url(command_list[2])
+
+							except IndexError:
+
+								raise IndexError
+
+						elif command_list[1] == "-rm":
+
+							try:
+
+								if command_list[2] == "-f":
+
+									self.urls.remove_url(None, command_list[3])
+
+								else:
+
+									self.urls.remove_url(command_list[2])
+
+							except IndexError:
+
+								raise IndexError
+
+						else:
+
+							raise IndexError
+
+					except IndexError:
+
+						self.messages.inform(self.messages.CONSOLE_URL_OPTIONS, True, None, False)
+
+				else:
+
+					self.messages.inform(self.messages.CONSOLE_COMMANDS, True, None, False)
+
+			except IndexError:
+
+				pass
+
+		except KeyboardInterrupt:
+
+			self.messages.inform(self.messages.CONSOLE_NO_KEYBOARD_INTERRUPT, True, None, False)
+
+		except EOFError:
+
+			self.messages.inform(self.messages.CONSOLE_NO_KEYBOARD_INTERRUPT, True, None, False)

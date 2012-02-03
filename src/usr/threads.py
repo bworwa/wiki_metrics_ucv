@@ -71,7 +71,7 @@ class Threads:
 
 			else:
 
-				sleep(0.5)
+				sleep(1)
 
 	def instantiate_priority_thread(self):
 
