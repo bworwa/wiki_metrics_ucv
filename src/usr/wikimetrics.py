@@ -12,7 +12,7 @@ import md5
 from core.scraper import Scraper
 from core.messages import Messages
 
-#pymongo
+# External
 from pymongo.errors import DuplicateKeyError
 
 # User defined
@@ -194,12 +194,14 @@ class Wikimetrics:
 								except ValueError:
 
 									# Spanish Wikipedia fix
+									# Locales taken from bash$ locale -a
+									# These are OS dependant
 
-									setlocale(LC_TIME, "es_VE.UTF-8")
+									setlocale(LC_TIME, "es_ES.utf8")
 
 									date = mktime(strptime(self.scraper.date[index], "%H:%M %d %b %Y"))
 
-									setlocale(LC_TIME, "en_US.UTF-8")
+									setlocale(LC_TIME, "en_US.utf8")
 
 								revision = {
 									"_id" : mediawiki_id,

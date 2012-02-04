@@ -1,6 +1,6 @@
 
 # Native
-from os import system
+from os import system, getpid
 from os.path import abspath, dirname
 from getpass import getuser
 from sys import argv, exit
@@ -37,8 +37,6 @@ if __name__ == "__main__":
 				console.run()
 
 		elif argv[1] == "-d":
-
-			# Disabled daemon mode until further notice to avoid data corruption
 
 			exit(0)
 
@@ -90,7 +88,7 @@ if __name__ == "__main__":
 
 			except IndexError:
 
-				messages.inform(messages.MAIN_DAEMON_OPTIONS, True, None, False)
+				raise IndexError
 
 		else:
 

@@ -8,7 +8,7 @@ from os import fork, chdir, setsid, umask, dup2, getpid, kill, remove
 from os.path import exists
 from sys import stderr, stdin, stdout, exit
 from errno import ESRCH
-from signal import signal, SIGTERM
+from signal import SIGTERM
 from time import sleep
 
 # User defined
@@ -24,6 +24,8 @@ class Daemon:
 	"""
 
 	messages = Messages()
+
+	threads = Threads()
 
 	def __init__(self, pid_file, usr_stdin = "/dev/null", usr_stdout = "/dev/null", usr_stderr = "/dev/null"):
 
@@ -191,10 +193,6 @@ class Daemon:
 
 				sleep(0.5)
 
-			remove(self.pid_file)
-
-			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
-
 		except OSError, error:
 
 			if error.errno == ESRCH:
@@ -217,20 +215,12 @@ class Daemon:
 
 class Priority_Daemon(Daemon):
 
-	threads = Threads()
-
 	def run(self):
-
-		#signal(SIGTERM, self.threads.stop_priority_thread)
 
 		self.threads.start_priority_thread()
 
 class Wikimetrics_Daemon(Daemon):
 
-	threads = Threads()
-
 	def run(self):
-
-		#signal(SIGTERM, self.threads.stop_wikimetrics_thread)
 
 		self.threads.start_wikimetrics_thread()

@@ -78,55 +78,58 @@
 	<!-- Threads -->
 
 	<!-- URLs -->
-	<message name="url_added">URL '%(url)s' has been added to the URL pool</message>
-	<message name="url_removed">URL '%(url)s' has been removed from the URL pool</message>
+	<message name="urls_added">%(urls_added)d/%(total_urls)d URLs have been added to the URL pool</message>
+	<message name="url_added">URL '%(url)s' had been added to the URL pool</message>
+	<message name="urls_removed">%(urls_removed)d/%(total_urls)d URLs have been removed from the URL pool</message>
+	<message name="url_removed">URL '%(url)s' had been removed from the URL pool</message>
 	<!-- URLs -->
 
 	<!-- Console -->
 	<message name="console_bye">Bye</message>
-	<message name="console_no_keyboard_interrupt">No keyboard interrupt allowed. Type 'exit' to exit gracefully and avoid data corruption.</message>
+	<message name="console_command_not_found">%(command)s: command not found. Type -help to see available commands</message>
+	<message name="console_no_keyboard_interrupt">No keyboard interrupt allowed. Type 'exit' to exit gracefully and avoid data corruption</message>
 	<message name="console_commands">
 Allowed commands:
 
 General commands:
 
-    clear:			clears the screen.
-    exit:			stops all threads and halts the execution.
-    start -[ a | p | w ]:	starts the specified thread(s).
-    stop -[ a | p | w ]:	stops the specified thread(s).
-    tstatus:			shows all threads status.
-    url -[ add | rm ] [ URL ]:	adds or removes the specified URL(s).
+    clear:                     clears the screen.
+    exit:                      stops all threads and halts the execution.
+    start -[ a | p | w ]:      starts the specified thread(s).
+    stop -[ a | p | w ]:       stops the specified thread(s).
+    tstatus:                   shows all threads status.
+    url -[ add | rm ] [ URL ]: adds or removes the specified URL(s).
 	</message>
 	<message name="console_start_options">
 Allowed options:
 
 General Options:
 
-    a:	starts all the threads.
-    p:	starts the priority thread.
-    w:	starts the wikimetrics thread.
+    -a: starts all the threads.
+    -p: starts the priority thread.
+    -w: starts the wikimetrics thread.
 	</message>
 	<message name="console_stop_options">
 Allowed options:
 
 General Options:
 
-    a:	stops all the threads.
-    p:	stops the priority thread.
-    w:	stops the wikimetrics thread.
+    -a: stops all the threads.
+    -p: stops the priority thread.
+    -w: stops the wikimetrics thread.
 	</message>
 	<message name="console_url_options">
 Allowed options:
 
 General Options:
 
-    -add:	adds the specified URL(s).
-    -rm:	removes the specified URL(s).
+    -add: adds the specified URL(s).
+    -rm:  removes the specified URL(s).
 
 Input Options:
 
-    URL:		a valid HTTP/HTTPS/SHTTP URL.
-    -f file.ext:	a file containing a set of 'URL', one per line.
+    URL:         a valid HTTP/HTTPS/SHTTP URL.
+    -f file.ext: a file containing a set of 'URL', one per line.
 	</message>
 	<!-- Console -->
 
@@ -140,22 +143,19 @@ Allowed options:
 
 General Options:
 
-    c:		starts the application as a console application.
-    d -options:	starts the application as a daemon application.
-	</message>
-	<message name="main_daemon_options">
-Allowed options:
+    -c:          starts the application as a console application.
+    -d options:  starts the application as a daemon application.
 
-General Options:
+Daemon Options:
 
-    -start -[ a | p | w ]:	starts the specified daemonized application.
-    -stop -[ a | p | w ]:	stops the specified daemonized application.
+    -start application(s): starts the specified daemonized application.
+    -stop application(s):  stops the specified daemonized application.
 
 Applications:
 
-    a:	wikimetrics &amp; priority applications.
-    p:	priority application.
-    w:	wikimetrics application.
+    -a: wikimetrics &amp; priority applications.
+    -p: priority application.
+    -w: wikimetrics application.
 	</message>
 	<!-- Main -->
 

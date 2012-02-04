@@ -1,8 +1,10 @@
 Wiki-Metrics-UCV
 ================
 
-Requirements so far:
+System requirements:
 --------------------
+
+* 1.536 MB of RAM (heavy pagination). Recommended: 2 GB.
 
 * Python 2.4+ (tested on 2.7.2+)
 

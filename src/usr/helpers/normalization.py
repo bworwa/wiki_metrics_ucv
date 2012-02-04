@@ -1,6 +1,7 @@
 
 # Native
 from urlparse import urlparse, parse_qs
+from urllib import quote
 
 # User defined
 from core.helpers.validation import Validation
@@ -47,7 +48,7 @@ class Normalization:
 
 				try:
 
-					url += "?title=" + query_string["title"][0] + "&action=history"
+					url += "?title=" + quote(query_string["title"][0]) + "&action=history"
 
 					url += "&offset=" + query_string["offset"][0]
 

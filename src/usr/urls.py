@@ -28,13 +28,21 @@ class Urls:
 
 	def add_url(self, url, path_to_file = None):
 
+		total_urls = 0
+
+		urls_added = 0
+
 		if not path_to_file:
+
+			total_urls = 1
 
 			normalized_url = self.normalization.normalize_article_to_history_url(url)
 
 			if normalized_url:
 
 				self.mongo.insert_new_article(normalized_url)
+
+				urls_added += 1
 
 				self.messages.inform(self.messages.URL_ADDED % {
 					"url" : normalized_url
@@ -54,7 +62,9 @@ class Urls:
 
 				for url in urls_file:
 
-					self.add_url(url.strip())
+					total_urls += 1
+
+					urls_added += self.add_url(url.strip())[0]
 
 				urls_file.close()
 
@@ -64,9 +74,17 @@ class Urls:
 					"path_to_file" : path_to_file
 				}, self.messages.URLS)
 
+		return (urls_added, total_urls)
+
 	def remove_url(self, url, path_to_file = None):
 
+		total_urls = 0
+
+		urls_removed = 0
+
 		if not path_to_file:
+
+			total_urls = 1
 
 			normalized_url = self.normalization.normalize_article_to_history_url(url)
 
@@ -75,6 +93,8 @@ class Urls:
 				self.mongo.remove_article(normalized_url)
 
 				self.mongo.remove_histories_by_article(normalized_url)
+
+				urls_removed += 1
 
 				self.messages.inform(self.messages.URL_REMOVED % {
 					"url" : normalized_url
@@ -94,7 +114,9 @@ class Urls:
 
 				for url in urls_file:
 
-					self.remove_url(url.strip())
+					total_urls += 1
+
+					urls_removed += self.remove_url(url.strip())[0]
 
 				urls_file.close()
 
@@ -103,3 +125,5 @@ class Urls:
 				self.messages.issue_warning(self.messages.GENERIC_FILE_IO_ERROR % {
 					"path_to_file" : path_to_file
 				}, self.messages.URLS)
+
+		return (urls_removed, total_urls)

@@ -47,6 +47,8 @@ class Console:
 
 			try:
 
+				command_list[0] = command_list[0].lower()
+
 				if command_list[0] == "clear":
 
 					system("clear")
@@ -129,11 +131,16 @@ class Console:
 
 								if command_list[2] == "-f":
 
-									self.urls.add_url(None, command_list[3])
+									urls_added = self.urls.add_url(None, command_list[3])
 
 								else:
 
-									self.urls.add_url(command_list[2])
+									urls_added = self.urls.add_url(command_list[2])
+
+								self.messages.inform(self.messages.URLS_ADDED % {
+									"urls_added" : urls_added[0],
+									"total_urls" : urls_added[1]
+								}, True, None, False)
 
 							except IndexError:
 
@@ -145,11 +152,16 @@ class Console:
 
 								if command_list[2] == "-f":
 
-									self.urls.remove_url(None, command_list[3])
+									urls_removed = self.urls.remove_url(None, command_list[3])
 
 								else:
 
-									self.urls.remove_url(command_list[2])
+									urls_removed = self.urls.remove_url(command_list[2])
+
+								self.messages.inform(self.messages.URLS_REMOVED % {
+									"urls_removed" : urls_removed[0],
+									"total_urls" : urls_removed[1]
+								}, True, None, False)
 
 							except IndexError:
 
@@ -163,9 +175,15 @@ class Console:
 
 						self.messages.inform(self.messages.CONSOLE_URL_OPTIONS, True, None, False)
 
-				else:
+				elif command_list[0] == "-help":
 
 					self.messages.inform(self.messages.CONSOLE_COMMANDS, True, None, False)
+
+				else:
+
+					self.messages.inform(self.messages.CONSOLE_COMMAND_NOT_FOUND % {
+						"command" : command_list[0]
+					}, True, None, False)
 
 			except IndexError:
 

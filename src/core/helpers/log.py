@@ -43,7 +43,7 @@ class Log:
 
 			self.current_path_to_log = (self.current_path_to_log + "/%d-%d-%d.log") % (now.day, now.month, now.year)
 
-			message = ("[%d:%d:%d] " + message) % (now.hour, now.minute, now.second)
+			message = (("[%d:%d:%d] " + message.replace("%", "%%")) % (now.hour, now.minute, now.second)).replace("%%", "%")
 
 			log = open(self.current_path_to_log, "a")
 
