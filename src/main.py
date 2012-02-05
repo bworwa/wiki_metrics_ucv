@@ -1,9 +1,9 @@
 
 # Native
 from os import system
-from os.path import abspath, dirname
 from getpass import getuser
-from sys import argv, exit
+from sys import argv
+from time import sleep
 
 # XCraper
 from core.messages import Messages
@@ -14,10 +14,6 @@ from usr.daemon import Daemon, Priority_Daemon, Wikimetrics_Daemon
 
 if __name__ == "__main__":
 
-	priority_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/priority_daemon.pid"
-
-	wikimetrics_daemon_pid_file_path = dirname(dirname(abspath(__file__))) + "/tmp/wikimetrics_daemon.pid"
-
 	messages = Messages()
 
 	try:
@@ -26,11 +22,11 @@ if __name__ == "__main__":
 
 			system("clear")
 
-			console = Console(priority_daemon_pid_file_path, wikimetrics_daemon_pid_file_path)
-
 			messages.inform(messages.MAIN_HEADER % {
 				"user" : getuser()
 			}, True, None, False)
+
+			console = Console()
 
 			while console.status == "running":
 
@@ -38,47 +34,35 @@ if __name__ == "__main__":
 
 		elif argv[1] == "-d":
 
-			# Disabled daemon mode until further notice to avoid data corruption
-
-			exit(0)
-
 			try:
 
 				if argv[2] == "-start":
 
-					if argv[3] == "-a":
-			
-						Priority_Daemon(priority_daemon_pid_file_path).start()
+					if argv[3] == "-p":
 
-						Wikimetrics_Daemon(wikimetrics_daemon_pid_file_path).start()
-
-					elif argv[3] == "-p":
-
-						Priority_Daemon(priority_daemon_pid_file_path).start()
+						Priority_Daemon(Priority_Daemon.config["pid_file_path"]).start()
 
 					elif argv[3] == "-w":
 
-						Wikimetrics_Daemon(wikimetrics_daemon_pid_file_path).start()
+						Wikimetrics_Daemon(Wikimetrics_Daemon.config["pid_file_path"]).start()
 
 					else:
 
 						raise IndexError
 
+					while True:
+
+						sleep(3600)
+
 				elif argv[2] == "-stop":
 
-					if argv[3] == "-a":
-			
-						Daemon(priority_daemon_pid_file_path).stop()
+					if argv[3] == "-p":
 
-						Daemon(wikimetrics_daemon_pid_file_path).stop()
-
-					elif argv[3] == "-p":
-
-						Daemon(priority_daemon_pid_file_path).stop()
+						Daemon(Priority_Daemon.config["pid_file_path"]).stop()
 
 					elif argv[3] == "-w":
 
-						Daemon(wikimetrics_daemon_pid_file_path).stop()
+						Daemon(Wikimetrics_Daemon.config["pid_file_path"]).stop()
 
 					else:
 

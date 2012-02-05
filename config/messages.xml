@@ -153,7 +153,6 @@ Daemon Options:
 
 Applications:
 
-    -a: wikimetrics &amp; priority applications.
     -p: priority application.
     -w: wikimetrics application.
 	</message>
@@ -161,9 +160,9 @@ Applications:
 
 	<!-- Daemon -->
 	<message name="daemon_fork_failed">Fork #%(number)d failed: %(errno)d (%(error)s)</message>
-	<message name="daemon_already_running">Daemon already running (PID: %(pid)d)</message>
-	<message name="starting_daemon">Starting daemon(s)%(separator)s</message>
+	<message name="starting_daemon">Starting daemon%(separator)s</message>
 	<message name="stopping_daemon">Stopping daemon%(separator)s</message>
 	<message name="daemon_ok">OK</message>
+	<message name="daemon_close_console">Close the console before starting any daemon</message>
 	<!-- Daemon -->
 </messages>

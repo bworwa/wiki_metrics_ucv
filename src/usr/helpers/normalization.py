@@ -1,7 +1,7 @@
 
 # Native
 from urlparse import urlparse, parse_qs
-from urllib import quote
+from urllib import quote, unquote
 
 # User defined
 from core.helpers.validation import Validation
@@ -48,7 +48,7 @@ class Normalization:
 
 				try:
 
-					url += "?title=" + quote(query_string["title"][0]) + "&action=history"
+					url += "?title=" + quote(unquote(query_string["title"][0])) + "&action=history"
 
 					url += "&offset=" + query_string["offset"][0]
 
@@ -86,7 +86,7 @@ class Normalization:
 
 					# Only for Wikipedia
 
-					url = scheme + "://" + host + "/w/index.php?title=" + path.replace("/wiki/", "").strip() + "&action=history"
+					url = scheme + "://" + host + "/w/index.php?title=" + quote(unquote(path.replace("/wiki/", "").strip())) + "&action=history"
 
 				return url
 

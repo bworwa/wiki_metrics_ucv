@@ -1,6 +1,8 @@
 
 # Native
-from os import system
+from os import makedirs, remove, system
+from os.path import abspath, dirname, exists
+from signal import signal, SIGTERM
 import readline
 
 # XCraper
@@ -9,9 +11,13 @@ from core.messages import Messages
 # User defined
 from usr.threads import Threads
 from usr.urls import Urls
-from usr.daemon import Daemon
+from usr.daemon import Daemon, Priority_Daemon, Wikimetrics_Daemon
 
 class Console:
+
+	config = {
+		"lock_file_path" : dirname(dirname(dirname(abspath(__file__)))) + "/tmp/console.lock"
+	}
 
 	status = "stopped"
 
@@ -21,21 +27,57 @@ class Console:
 
 	urls = Urls()
 
-	def __init__(self, priority_daemon_pid_file_path, wikimetrics_daemon_pid_file_path):
+	def __init__(self):
 
 		self.status = "running"
 
-		self.priority_daemon_pid_file_path = priority_daemon_pid_file_path
+		# Create/write .lock file
 
-		self.wikimetrics_daemon_pid_file_path = wikimetrics_daemon_pid_file_path
+		if not exists(dirname(self.config["lock_file_path"])):
 
-		pass
+			try:
+
+				makedirs(dirname(self.config["lock_file_path"]))
+
+			except OSError:
+
+				# [Medium] TODO
+
+				pass
+
+		try:
+
+			file(self.config["lock_file_path"], 'w').write("")
+
+		except OSError:
+
+			# [Medium] TODO
+
+			pass
+
+		signal(SIGTERM, self.sigterm_handler)
 
 	def __del__(self):
 
 		# [Low] TODO
 
 		pass
+
+	def sigterm_handler(self, signal_number, frame):
+
+		self.threads.stop_all_threads()
+
+		try:
+
+			remove(self.config["lock_file_path"])
+
+		except IOError, error:
+
+			# [Medium] TODO
+
+			pass
+
+		exit(0)
 
 	def run(self):
 
@@ -61,27 +103,37 @@ class Console:
 
 					self.messages.inform(self.messages.CONSOLE_BYE, True, None, False)
 
+					try:
+
+						remove(self.config["lock_file_path"])
+
+					except IOError, error:
+
+						# [Medium] TODO
+
+						pass
+
 				elif command_list[0] == "start":
 
 					try:
 
 						if command_list[1] == "-a":
 
-							Daemon(self.priority_daemon_pid_file_path).stop()
-						
-							Daemon(self.wikimetrics_daemon_pid_file_path).stop()
+							Daemon(Priority_Daemon.config["pid_file_path"]).stop()
+
+							Daemon(Wikimetrics_Daemon.config["pid_file_path"]).stop()
 
 							self.threads.start_all_threads()
 
 						elif command_list[1] == "-p":
 
-							Daemon(self.priority_daemon_pid_file_path).stop()
+							Daemon(Priority_Daemon.config["pid_file_path"]).stop()
 
 							self.threads.start_priority_thread()
 
 						elif command_list[1] == "-w":
 
-							Daemon(self.wikimetrics_daemon_pid_file_path).stop()
+							Daemon(Wikimetrics_Daemon.config["pid_file_path"]).stop()
 
 							self.threads.start_wikimetrics_thread()
 

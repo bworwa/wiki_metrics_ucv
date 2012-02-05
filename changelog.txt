@@ -1,10 +1,13 @@
-[Not yet released] v1.0.1
+v1.0.1
 	- Fixed an issue related to Wikipedia's spanish dates formats.
 	- Fixed an issue related to messages formats, having a message with %'s in it would break the log function.
 	- Fixed an issue related to unquoted (unescaped) URLs, URL's paths containing unescaped special characters would break the system.
 	- Added the message "X/X URLs have been added/removed to/from the URL pool" when adding/removing URLs.
-	- Improved console's messages.
+	- Improved console messages.
 	- Refactored the Daemon class.
-	- Disabled daemon mode until further notice to avoid data corruption.
+	- Removed the -d -(start | stop) -a option, it was causing non-safe terminations.
+	- Added extra logic to the daemons-console interaction, daemons cannot be started while a console is running but a console can be
+	  started while daemons are running. If threads are started in console mode then the respective daemons are killed beforehand.
+	- /tmp directory is created automatically if it doesn't exist.
 v1.0.0
 	- Version 1.0.0
