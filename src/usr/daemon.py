@@ -195,9 +195,9 @@ class Daemon:
 
 			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
 
-	def get_pid(self, daemon_pid_file_path):
+	def get_pid(self, pid_file_path):
 
-		daemon_pid = self.control_files.get_content(daemon_pid_file_path)
+		daemon_pid = self.control_files.get_content(pid_file_path)
 
 		if daemon_pid:
 
