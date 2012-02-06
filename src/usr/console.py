@@ -26,6 +26,8 @@ class Console:
 
 	threads = Threads()
 
+	daemon = Daemon(None)
+
 	urls = Urls()
 
 	control_files = Control_Files()
@@ -49,16 +51,6 @@ class Console:
 		self.threads.stop_all_threads()
 
 		exit(0)
-
-	def get_daemon_pid(self, daemon_pid_file_path):
-
-		daemon_pid = self.control_files.get_content(daemon_pid_file_path)
-
-		if daemon_pid:
-
-			return daemon_pid
-
-		return None
 
 	def run(self):
 
@@ -90,7 +82,7 @@ class Console:
 
 						if command_list[1] == "-a":
 
-							priority_daemon_pid = self.get_daemon_pid(Priority_Daemon.config["pid_file_path"])
+							priority_daemon_pid = self.daemon.get_pid(Priority_Daemon.config["pid_file_path"])
 
 							if priority_daemon_pid:
 
@@ -103,7 +95,7 @@ class Console:
 
 								self.threads.start_priority_thread()
 
-							wikimetrics_daemon_pid = self.get_daemon_pid(Wikimetrics_Daemon.config["pid_file_path"])
+							wikimetrics_daemon_pid = self.daemon.get_pid(Wikimetrics_Daemon.config["pid_file_path"])
 
 							if wikimetrics_daemon_pid:
 
@@ -118,7 +110,7 @@ class Console:
 
 						elif command_list[1] == "-p":							
 
-							priority_daemon_pid = self.get_daemon_pid(Priority_Daemon.config["pid_file_path"])
+							priority_daemon_pid = self.daemon.get_pid(Priority_Daemon.config["pid_file_path"])
 
 							if priority_daemon_pid:
 
@@ -133,7 +125,7 @@ class Console:
 
 						elif command_list[1] == "-w":
 
-							wikimetrics_daemon_pid = self.get_daemon_pid(Wikimetrics_Daemon.config["pid_file_path"])
+							wikimetrics_daemon_pid = self.daemon.get_pid(Wikimetrics_Daemon.config["pid_file_path"])
 
 							if wikimetrics_daemon_pid:
 

@@ -45,7 +45,9 @@ class Daemon:
 
 	def __del__(self):
 
-		self.control_files.remove_file(self.pid_file_path)
+		if self.pid_file_path:
+
+			self.control_files.remove_file(self.pid_file_path)
 	
 	def daemonize(self):
 
@@ -192,6 +194,16 @@ class Daemon:
 		if console_output:
 
 			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
+
+	def get_pid(self, daemon_pid_file_path):
+
+		daemon_pid = self.control_files.get_content(daemon_pid_file_path)
+
+		if daemon_pid:
+
+			return daemon_pid
+
+		return None
 
 class Priority_Daemon(Daemon):
 
