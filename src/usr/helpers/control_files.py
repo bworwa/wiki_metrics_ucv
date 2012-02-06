@@ -3,7 +3,7 @@
 from os import makedirs, remove
 from os.path import abspath, dirname, exists
 
-class Control_files:
+class Control_Files:
 
 	def file_exists(self, file_path):
 

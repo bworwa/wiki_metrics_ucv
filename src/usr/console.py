@@ -12,7 +12,7 @@ from core.messages import Messages
 from usr.threads import Threads
 from usr.urls import Urls
 from usr.daemon import Daemon, Priority_Daemon, Wikimetrics_Daemon
-from usr.helpers.control_files import Control_files
+from usr.helpers.control_files import Control_Files
 
 class Console:
 
@@ -28,7 +28,7 @@ class Console:
 
 	urls = Urls()
 
-	control_files = Control_files()
+	control_files = Control_Files()
 
 	def __init__(self):
 

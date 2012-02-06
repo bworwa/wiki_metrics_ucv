@@ -14,7 +14,7 @@ from time import sleep
 # User defined
 from core.messages import Messages
 from usr.threads import Threads
-from usr.helpers.control_files import Control_files
+from usr.helpers.control_files import Control_Files
 import usr.console
 
 class Daemon:
@@ -29,7 +29,7 @@ class Daemon:
 
 	threads = Threads()
 
-	control_files = Control_files()
+	control_files = Control_Files()
 
 	def __init__(self, pid_file_path, usr_stdin = "/dev/null", usr_stdout = "/dev/null", usr_stderr = "/dev/null"):
 
