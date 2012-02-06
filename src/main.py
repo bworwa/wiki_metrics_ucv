@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
 			try:
 
-				if argv[2] == "-start":
+				if argv[2] == "start":
 
 					if argv[3] == "-p":
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
 						sleep(3600)
 
-				elif argv[2] == "-stop":
+				elif argv[2] == "stop":
 
 					if argv[3] == "-p":
 

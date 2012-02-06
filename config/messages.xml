@@ -86,8 +86,10 @@
 
 	<!-- Console -->
 	<message name="console_bye">Bye</message>
-	<message name="console_command_not_found">%(command)s: command not found. Type -help to see available commands</message>
+	<message name="console_command_not_found">%(command)s: command not found. Type 'help' to see available commands</message>
+	<message name="console_invalid_option">%(option)s: is not a valid option. Type '%(command)s -help' to see available options</message>
 	<message name="console_no_keyboard_interrupt">No keyboard interrupt allowed. Type 'exit' to exit gracefully and avoid data corruption</message>
+	<message name="console_no_option_specified">Please specify the command required option(s). Type '%(command)s -help' to see available options</message>
 	<message name="console_commands">
 Allowed commands:
 
@@ -95,6 +97,7 @@ General commands:
 
     clear:                     clears the screen.
     exit:                      stops all threads and halts the execution.
+    help:                      shows all the allowed commands.
     start -[ a | p | w ]:      starts the specified thread(s).
     stop -[ a | p | w ]:       stops the specified thread(s).
     tstatus:                   shows all threads status.
@@ -123,8 +126,8 @@ Allowed options:
 
 General Options:
 
-    -add: adds the specified URL(s).
-    -rm:  removes the specified URL(s).
+    -add options: adds the URL(s) specified by 'options'.
+    -rm options:  removes the URL(s) specified by 'options'.
 
 Input Options:
 
@@ -148,8 +151,8 @@ General Options:
 
 Daemon Options:
 
-    -start application(s): starts the specified daemonized application.
-    -stop application(s):  stops the specified daemonized application.
+    start application(s): starts the specified daemonized application.
+    stop application(s):  stops the specified daemonized application.
 
 Applications:
 
@@ -163,6 +166,6 @@ Applications:
 	<message name="starting_daemon">Starting daemon%(separator)s</message>
 	<message name="stopping_daemon">Stopping daemon%(separator)s</message>
 	<message name="daemon_ok">OK</message>
-	<message name="daemon_close_console">Close the console before starting any daemon</message>
+	<message name="daemon_console_already_running">Exit from the console application before starting any daemon</message>
 	<!-- Daemon -->
 </messages>

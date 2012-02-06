@@ -1,7 +1,7 @@
 
 # Native
-from os import makedirs, remove, system
-from os.path import abspath, dirname, exists
+from os import getpid, system
+from os.path import abspath, dirname
 from signal import signal, SIGTERM
 import readline
 
@@ -12,6 +12,7 @@ from core.messages import Messages
 from usr.threads import Threads
 from usr.urls import Urls
 from usr.daemon import Daemon, Priority_Daemon, Wikimetrics_Daemon
+from usr.helpers.control_files import Control_files
 
 class Console:
 
@@ -27,57 +28,27 @@ class Console:
 
 	urls = Urls()
 
+	control_files = Control_files()
+
 	def __init__(self):
 
 		self.status = "running"
 
 		# Create/write .lock file
 
-		if not exists(dirname(self.config["lock_file_path"])):
-
-			try:
-
-				makedirs(dirname(self.config["lock_file_path"]))
-
-			except OSError:
-
-				# [Medium] TODO
-
-				pass
-
-		try:
-
-			file(self.config["lock_file_path"], 'w').write("")
-
-		except OSError:
-
-			# [Medium] TODO
-
-			pass
+		self.control_files.create_file(self.config["lock_file_path"], getpid())
 
 		signal(SIGTERM, self.sigterm_handler)
 
 	def __del__(self):
 
-		# [Low] TODO
-
-		pass
+		self.control_files.remove_file(self.config["lock_file_path"])
 
 	def sigterm_handler(self, signal_number, frame):
 
 		self.threads.stop_all_threads()
 
-		try:
-
-			remove(self.config["lock_file_path"])
-
-		except IOError, error:
-
-			# [Medium] TODO
-
-			pass
-
-		exit(0)
+		exit(0)		
 
 	def run(self):
 
@@ -103,16 +74,6 @@ class Console:
 
 					self.messages.inform(self.messages.CONSOLE_BYE, True, None, False)
 
-					try:
-
-						remove(self.config["lock_file_path"])
-
-					except IOError, error:
-
-						# [Medium] TODO
-
-						pass
-
 				elif command_list[0] == "start":
 
 					try:
@@ -137,13 +98,22 @@ class Console:
 
 							self.threads.start_wikimetrics_thread()
 
+						elif command_list[1] == "-help":
+
+							self.messages.inform(self.messages.CONSOLE_START_OPTIONS, True, None, False)
+
 						else:
 
-							raise IndexError
+							self.messages.inform(self.messages.CONSOLE_INVALID_OPTION % {
+								"option" : command_list[1],
+								"command" : "start"
+							}, True, None, False)
 
 					except IndexError:
 
-						self.messages.inform(self.messages.CONSOLE_START_OPTIONS, True, None, False)
+						self.messages.inform(self.messages.CONSOLE_NO_OPTION_SPECIFIED % {
+							"command" : "start"
+						}, True, None, False)
 
 				elif command_list[0] == "stop":
 
@@ -161,13 +131,22 @@ class Console:
 
 							self.threads.stop_wikimetrics_thread()
 
+						elif command_list[1] == "-help":
+
+							self.messages.inform(self.messages.CONSOLE_STOP_OPTIONS, True, None, False)
+
 						else:
 
-							raise IndexError
+							self.messages.inform(self.messages.CONSOLE_INVALID_OPTION % {
+								"option" : command_list[1],
+								"command" : "stop"
+							}, True, None, False)
 
 					except IndexError:
 
-						self.messages.inform(self.messages.CONSOLE_STOP_OPTIONS, True, None, False)
+						self.messages.inform(self.messages.CONSOLE_NO_OPTION_SPECIFIED % {
+							"command" : "stop"
+						}, True, None, False)
 
 				elif command_list[0] == "tstatus":
 
@@ -196,7 +175,9 @@ class Console:
 
 							except IndexError:
 
-								raise IndexError
+								self.messages.inform(self.messages.CONSOLE_NO_OPTION_SPECIFIED % {
+									"command" : "url"
+								}, True, None, False)
 
 						elif command_list[1] == "-rm":
 
@@ -217,17 +198,28 @@ class Console:
 
 							except IndexError:
 
-								raise IndexError
+								self.messages.inform(self.messages.CONSOLE_NO_OPTION_SPECIFIED % {
+									"command" : "url"
+								}, True, None, False)
+
+						elif command_list[1] == "-help":
+
+							self.messages.inform(self.messages.CONSOLE_URL_OPTIONS, True, None, False)
 
 						else:
 
-							raise IndexError
+							self.messages.inform(self.messages.CONSOLE_INVALID_OPTION % {
+								"option" : command_list[1],
+								"command" : "url"
+							}, True, None, False)
 
 					except IndexError:
 
-						self.messages.inform(self.messages.CONSOLE_URL_OPTIONS, True, None, False)
+						self.messages.inform(self.messages.CONSOLE_NO_OPTION_SPECIFIED % {
+							"command" : "url"
+						}, True, None, False)
 
-				elif command_list[0] == "-help":
+				elif command_list[0] == "help":
 
 					self.messages.inform(self.messages.CONSOLE_COMMANDS, True, None, False)
 

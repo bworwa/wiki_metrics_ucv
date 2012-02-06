@@ -4,9 +4,9 @@
 # Rewritten by: Benjamin Worwa
 
 # Native
-from os import fork, chdir, setsid, umask, dup2, getpid, kill, remove, makedirs
-from os.path import abspath, dirname, exists
-from sys import stderr, stdin, stdout, exit
+from os import fork, chdir, setsid, umask, dup2, getpid, kill
+from os.path import abspath, dirname
+from sys import modules, stderr, stdin, stdout, exit
 from errno import ESRCH
 from signal import signal, SIGTERM
 from time import sleep
@@ -14,8 +14,7 @@ from time import sleep
 # User defined
 from core.messages import Messages
 from usr.threads import Threads
-
-# Why can't we "from usr.console import Console"?
+from usr.helpers.control_files import Control_files
 import usr.console
 
 class Daemon:
@@ -30,6 +29,8 @@ class Daemon:
 
 	threads = Threads()
 
+	control_files = Control_files()
+
 	def __init__(self, pid_file_path, usr_stdin = "/dev/null", usr_stdout = "/dev/null", usr_stderr = "/dev/null"):
 
 		self.pid_file_path = pid_file_path
@@ -41,6 +42,10 @@ class Daemon:
 		self.stdout = usr_stdout
 
 		self.messages.DAEMONS = "daemons"
+
+	def __del__(self):
+
+		self.control_files.remove_file(self.pid_file_path)
 	
 	def daemonize(self):
 
@@ -54,15 +59,9 @@ class Daemon:
 			"separator" : "... "
 		}, False, self.messages.DAEMONS)
 
-		try:
+		if(self.control_files.file_exists(usr.console.Console.config["lock_file_path"])):
 
-			open(usr.console.Console.config["lock_file_path"], 'r')
-
-			self.messages.raise_error(self.messages.DAEMON_CLOSE_CONSOLE, self.messages.DAEMONS)
-
-		except IOError:
-
-			pass
+			self.messages.raise_error(self.messages.DAEMON_CONSOLE_ALREADY_RUNNING, self.messages.DAEMONS)
 
 		parent_pid = getpid()
 
@@ -114,27 +113,7 @@ class Daemon:
 
 		# Create/write .pid file
 
-		if not exists(dirname(self.pid_file_path)):
-
-			try:
-
-				makedirs(dirname(self.pid_file_path))
-
-			except OSError:
-
-				# [Medium] TODO
-
-				pass
-
-		try:
-
-			open(self.pid_file_path, 'w').write(str(getpid()))
-
-		except OSError:
-
-			# [Medium] TODO
-
-			pass
+		self.control_files.create_file(self.pid_file_path, getpid())
 
 		self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
 
@@ -162,41 +141,35 @@ class Daemon:
 		Start the daemon
 		"""
 
-		self.stop()
+		self.stop(False)
 
 		self.daemonize()
 
 		self.run()
 
-	def stop(self):
+	def stop(self, console_output = True):
 
 		"""
 		Stop the daemon
 		"""
 
-		self.messages.inform(self.messages.STOPPING_DAEMON % {
-			"separator" : "... "
-		}, False, self.messages.DAEMONS)
+		if console_output:
+
+			self.messages.inform(self.messages.STOPPING_DAEMON % {
+				"separator" : "... "
+			}, False, self.messages.DAEMONS)
 
 		# Get the pid from the .pid file
 
 		try:
 
-			pid_file = open(self.pid_file_path, 'r')
-
-			pid = int(pid_file.read().strip())
-
-			pid_file.close()
-
-		except IOError:
-
-			pid = None
+			pid = int(self.control_files.get_content(self.pid_file_path))
 
 		except TypeError:
 
 			pid = None
 
-			remove(self.pid_file_path)
+			self.control_files.remove_file(self.pid_file_path)
 
 		# Try killing the daemon process
 
@@ -216,7 +189,9 @@ class Daemon:
 
 					self.messages.raise_error(error.strerror, self.messages.DAEMONS)
 
-		self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
+		if console_output:
+
+			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
 
 class Priority_Daemon(Daemon):
 
@@ -233,16 +208,6 @@ class Priority_Daemon(Daemon):
 	def sigterm_handler(self, signal_number, frame):
 
 		self.threads.stop_priority_thread()
-
-		try:
-
-			remove(self.config["pid_file_path"])
-
-		except IOError, error:
-
-			# [Medium] TODO
-
-			pass
 
 		exit(0)
 
@@ -261,15 +226,5 @@ class Wikimetrics_Daemon(Daemon):
 	def sigterm_handler(self, signal_number, frame):
 
 		self.threads.stop_wikimetrics_thread()
-
-		try:
-
-			remove(self.config["pid_file_path"])
-
-		except IOError, error:
-
-			# [Medium] TODO
-
-			pass
 
 		exit(0)

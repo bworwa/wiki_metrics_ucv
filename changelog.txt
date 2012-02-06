@@ -1,3 +1,9 @@
+v1.0.2
+	- Refactored the Daemon class.
+	- Standardized the file management of the Daemon and Console class.
+	- Changed daemons -start and -stop commands to start and stop, respectively.
+	- Added extra messages to the console, allowed commands will only show if the user types "command -help" instead of showing them
+	  by default on "command/option miss".
 v1.0.1
 	- Fixed an issue related to Wikipedia's spanish dates formats.
 	- Fixed an issue related to messages formats, having a message with %'s in it would break the log function.
@@ -9,5 +15,6 @@ v1.0.1
 	- Added extra logic to the daemons-console interaction, daemons cannot be started while a console is running but a console can be
 	  started while daemons are running. If threads are started in console mode then the respective daemons are killed beforehand.
 	- /tmp directory is created automatically if it doesn't exist.
+	- Added SIGTERM, Ctrl + C and Ctrl + D handlers to the console in order to avoid data corruption.
 v1.0.0
 	- Version 1.0.0
