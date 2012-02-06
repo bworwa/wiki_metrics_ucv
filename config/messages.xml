@@ -90,6 +90,7 @@
 	<message name="console_invalid_option">%(option)s: is not a valid option. Type '%(command)s -help' to see available options</message>
 	<message name="console_no_keyboard_interrupt">No keyboard interrupt allowed. Type 'exit' to exit gracefully and avoid data corruption</message>
 	<message name="console_no_option_specified">Please specify the command required option(s). Type '%(command)s -help' to see available options</message>
+	<message name="console_stop_daemon">The %(name)s daemon is already running (PID: %(pid)d). Please stop it before starting the %(name)s thread</message>
 	<message name="console_commands">
 Allowed commands:
 

@@ -38,7 +38,15 @@ if __name__ == "__main__":
 
 				if argv[2] == "start":
 
-					if argv[3] == "-p":
+					if argv[3] == "-a":
+
+						system("python " + argv[0] + " -d start -p")
+
+						system("python " + argv[0] + " -d start -w")
+
+						exit(0)
+
+					elif argv[3] == "-p":
 
 						Priority_Daemon(Priority_Daemon.config["pid_file_path"]).start()
 
@@ -56,7 +64,13 @@ if __name__ == "__main__":
 
 				elif argv[2] == "stop":
 
-					if argv[3] == "-p":
+					if argv[3] == "-a":
+
+						Daemon(Priority_Daemon.config["pid_file_path"]).stop()
+
+						Daemon(Wikimetrics_Daemon.config["pid_file_path"]).stop()
+
+					elif argv[3] == "-p":
 
 						Daemon(Priority_Daemon.config["pid_file_path"]).stop()
 

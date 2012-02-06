@@ -48,7 +48,17 @@ class Console:
 
 		self.threads.stop_all_threads()
 
-		exit(0)		
+		exit(0)
+
+	def get_daemon_pid(self, daemon_pid_file_path):
+
+		daemon_pid = self.control_files.get_content(daemon_pid_file_path)
+
+		if daemon_pid:
+
+			return daemon_pid
+
+		return None
 
 	def run(self):
 
@@ -80,23 +90,61 @@ class Console:
 
 						if command_list[1] == "-a":
 
-							Daemon(Priority_Daemon.config["pid_file_path"]).stop()
+							priority_daemon_pid = self.get_daemon_pid(Priority_Daemon.config["pid_file_path"])
 
-							Daemon(Wikimetrics_Daemon.config["pid_file_path"]).stop()
+							if priority_daemon_pid:
 
-							self.threads.start_all_threads()
+								self.messages.inform(self.messages.CONSOLE_STOP_DAEMON % {
+									"name" : "priority",
+									"pid" : int(priority_daemon_pid)
+								}, True, None, False)
 
-						elif command_list[1] == "-p":
+							else:
 
-							Daemon(Priority_Daemon.config["pid_file_path"]).stop()
+								self.threads.start_priority_thread()
 
-							self.threads.start_priority_thread()
+							wikimetrics_daemon_pid = self.get_daemon_pid(Wikimetrics_Daemon.config["pid_file_path"])
+
+							if wikimetrics_daemon_pid:
+
+								self.messages.inform(self.messages.CONSOLE_STOP_DAEMON % {
+									"name" : "wikimetrics",
+									"pid" : int(wikimetrics_daemon_pid)
+								}, True, None, False)
+
+							else:
+
+								self.threads.start_wikimetrics_thread()
+
+						elif command_list[1] == "-p":							
+
+							priority_daemon_pid = self.get_daemon_pid(Priority_Daemon.config["pid_file_path"])
+
+							if priority_daemon_pid:
+
+								self.messages.inform(self.messages.CONSOLE_STOP_DAEMON % {
+									"name" : "priority",
+									"pid" : int(priority_daemon_pid)
+								}, True, None, False)
+
+							else:
+
+								self.threads.start_priority_thread()
 
 						elif command_list[1] == "-w":
 
-							Daemon(Wikimetrics_Daemon.config["pid_file_path"]).stop()
+							wikimetrics_daemon_pid = self.get_daemon_pid(Wikimetrics_Daemon.config["pid_file_path"])
 
-							self.threads.start_wikimetrics_thread()
+							if wikimetrics_daemon_pid:
+
+								self.messages.inform(self.messages.CONSOLE_STOP_DAEMON % {
+									"name" : "wikimetrics",
+									"pid" : int(wikimetrics_daemon_pid)
+								}, True, None, False)
+
+							else:
+
+								self.threads.start_wikimetrics_thread()
 
 						elif command_list[1] == "-help":
 
