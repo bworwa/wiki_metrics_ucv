@@ -195,13 +195,17 @@ class Daemon:
 
 			self.messages.inform(self.messages.DAEMON_OK, True, self.messages.DAEMONS)
 
+	def run(self):
+
+		pass
+
 	def get_pid(self, pid_file_path):
 
-		daemon_pid = self.control_files.get_content(pid_file_path)
+		pid = self.control_files.get_content(pid_file_path)
 
-		if daemon_pid:
+		if pid:
 
-			return daemon_pid
+			return pid
 
 		return None
 
