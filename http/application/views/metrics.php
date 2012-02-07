@@ -8,6 +8,9 @@
 			<div id="revisions">
 				<div>
 					Article:<h1 id="article_title"><?php echo $article_title; ?></h1>
+					<span id="article_url">
+						(<a href="<?php echo $article_url; ?>" target="_blank"><?php echo $article_title; ?></a>)
+					</span>
 				</div>
 				<div id="chart"></div>
 			</div>

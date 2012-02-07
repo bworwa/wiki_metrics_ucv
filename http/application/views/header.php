@@ -11,7 +11,7 @@
 	</head>
 	<body>
 		<div id="url_form" class="centered">
-			<form action="index.php/metrics" method="GET" class="translucid">
+			<form action="<?php echo $base_url; ?>index.php/metrics" method="GET" class="translucid">
 				<input id="url" name="url" type="url" class="round_corners drop_shadow" required>
 				<input id="url_submit" type="submit" value="View metrics" class="round_corners drop_shadow">
 			</form>		

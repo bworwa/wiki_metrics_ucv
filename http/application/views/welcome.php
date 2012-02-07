@@ -2,7 +2,7 @@
 			My recent searches: <?php if(!empty($recently_searched_articles)) echo $recently_searched_articles; else echo "none"; ?>
 		</div>
 		<div id="view_all_articles" class="centered">
-			<a href="#">View all available articles</a>
+			<a href="<?php echo $base_url; ?>index.php/welcome/view_all_articles">View all available articles</a>
 		</div>	
 		<script src="https://www.google.com/jsapi"></script>
 		<script>
