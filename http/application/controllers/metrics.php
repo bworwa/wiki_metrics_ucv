@@ -49,18 +49,17 @@ class Metrics extends CI_Controller
 		{
 			$revisions_count = $db->histories->group(
 				array(),
-				array(
-					"revisions" => array()
-				),
+				array("revisions" => array()),
 				"function(obj, prev){
 					var date = new Date(obj.date * 1000);
-					var dateKey = hex_md5(date.getFullYear() + '' + date.getMonth() + '' + date.getDate());
+					var dateKey = hex_md5(date.getFullYear() + '' + date.getMonth());
 					if(typeof prev.revisions[dateKey] != 'undefined')
 						prev.revisions[dateKey]['revisions'] += 1;
 					else
 					{
 						prev.revisions[dateKey] = Array();
-						prev.revisions[dateKey]['date'] = obj.date;
+						prev.revisions[dateKey]['timestamp'] = date;
+						prev.revisions[dateKey]['date'] = (date.getMonth() + 1) + '/' + date.getFullYear();
 						prev.revisions[dateKey]['revisions'] = 1;
 					}
 				}",
@@ -69,7 +68,9 @@ class Metrics extends CI_Controller
 
 			$metrics_data["revisions_count"] = $revisions_count["retval"][0]["revisions"];
 
-			parse_str(parse_url($metrics_data["article_url"], PHP_URL_QUERY), $query_string);
+			usort($metrics_data["revisions_count"], function($first_element, $second_element) {
+				return $first_element["timestamp"]->sec > $second_element["timestamp"]->sec;
+			});
 		}
 
 		$this->load->view('header', $header_data);

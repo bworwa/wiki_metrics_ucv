@@ -55,9 +55,8 @@
 			
 			function drawChart()
 			{
-				var time;
 				var data = new google.visualization.DataTable();
-				data.addColumn("date", "Date");
+				data.addColumn("string", "Date");
 				data.addColumn("number", "Revisions");
 
 				<?php
@@ -65,15 +64,17 @@
 						foreach($revisions_count as $count):
 				?>
 
-					data.addRows([[new Date(<?php echo $count["date"]; ?> * 1000), <?php echo $count["revisions"]; ?>]]);
+					data.addRows([["<?php echo $count["date"]; ?>", <?php echo $count["revisions"]; ?>]]);
 				
 				<?php endforeach; ?>
 
 				var chart = new google.visualization.LineChart(document.getElementById("chart"));
+
 				chart.draw(
 					data,
-					{ chartArea:
-						{ width: "90%", height: "80%" },
+					{
+						chartArea:
+							{ width: "90%", height: "80%" },
 						legend: "none",
 						pointSize: 5,
 						titlePosition: "none",
