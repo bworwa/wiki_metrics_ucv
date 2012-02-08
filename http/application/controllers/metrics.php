@@ -58,7 +58,7 @@ class Metrics extends CI_Controller
 					else
 					{
 						prev.revisions[dateKey] = Array();
-						prev.revisions[dateKey]['timestamp'] = date;
+						prev.revisions[dateKey]['timestamp'] = obj.date;
 						prev.revisions[dateKey]['date'] = (date.getMonth() + 1) + '/' + date.getFullYear();
 						prev.revisions[dateKey]['revisions'] = 1;
 					}
@@ -69,7 +69,7 @@ class Metrics extends CI_Controller
 			$metrics_data["revisions_count"] = $revisions_count["retval"][0]["revisions"];
 
 			usort($metrics_data["revisions_count"], function($first_element, $second_element) {
-				return $first_element["timestamp"]->sec > $second_element["timestamp"]->sec;
+				return $first_element["timestamp"] > $second_element["timestamp"];
 			});
 		}
 
