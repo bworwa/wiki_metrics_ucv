@@ -1,53 +1,71 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 class Welcome extends CI_Controller
 {
-	public function index()
-	{
-		$header_data = array();
+    var $base_url;
+    
+    var $header_data;
+    var $body_data;
+    var $footer_data;
+    
+    var $recent_searches;
 
-		$this->load->helper('url');
+    public function __construct()
+    {
+        parent::__construct();
 
-		$header_data["base_url"] = base_url();
+        $this->header_data = array();
+        $this->body_data = array();
+        $this->footer_data = array();
 
-		$header_data["welcome_title"] = "Wiki-Metrics-UCV";
+        $this->load->helper('url');
+        $this->base_url = base_url();
+        $this->header_data["base_url"] = $this->base_url;
+        
+        $this->load->model("common_model");
+        $this->header_data["recent_searches"] = $this->common_model->get_recent_searches($this->base_url);
+    }
 
-		$this->load->view('header', $header_data);
+    public function index()
+    {
+        $this->header_data["page_title"] = "Wiki-Metrics-UCV";
 
-		$this->load->view('welcome');
+        $this->load->view('header', $this->header_data);
+        $this->load->view('welcome', $this->body_data);
+        $this->load->view('footer', $this->footer_data);
+    }
 
-		$this->load->view('footer');
-	}
+    public function view_all_articles()
+    {
+        $this->header_data["page_title"] = "Wiki-Metrics-UCV";
 
-	public function view_all_articles()
-	{
-		$this->load->helper('url');
+        $articles = $this->common_model->get_all_articles_id();
 
-		$mongo = new Mongo();
+        $this->body_data["articles"] = array();
 
-		$db = $mongo->wiki_metrics_ucv;
+        if (!empty($articles))            
+            foreach ($articles as $article)                
+                array_push(
+                        $this->body_data["articles"],
+                        array(
+                            "url" => urlencode($article["_id"]),
+                            "host" => $this->common_model->resolve_article_host($article["_id"]),
+                            "title" => $this->common_model->resolve_article_title($article["_id"])
+                        )
+                );
+        
+        usort($this->body_data["articles"], function($first_element, $second_element)
+                {
+                    return $first_element["title"] > $second_element["title"];
+                });
 
-		$articles = $db->articles->find(array(), array("_id" => 1));
-
-		header("Content-type: text/html; charset=utf-8");
-
-		echo "<ul>";
-
-		foreach($articles as $article)
-		{
-			$parsed_article_url = parse_url($article["_id"]);
-
-			parse_str($parsed_article_url["query"], $query_string);
-
-			echo "<li>
-					<a href=\"" .base_url() ."index.php/metrics?url=" . urlencode($article["_id"]) ."\">" .
-						str_replace("_", " ", $query_string["title"]) .
-					"</a>
-				</li>";
-		}
-
-		echo "</ul>";
-	}
+        $this->load->view('header', $this->header_data);
+        $this->load->view('view_all_articles', $this->body_data);
+        $this->load->view('footer', $this->footer_data);
+    }
 }
 
 /* End of file welcome.php */

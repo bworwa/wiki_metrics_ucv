@@ -1,84 +1,65 @@
-<?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
+<?php
+
+if (!defined('BASEPATH'))
+    exit('No direct script access allowed');
 
 class Metrics extends CI_Controller
 {
-	public function index()
-	{
-		$header_data = array();
+    var $header_data;
+    var $body_data;
+    var $footer_data;
+    
+    var $base_url;
+    
+    var $normalized_article_url;
+    
+    public function __construct()
+    {
+        parent::__construct();
+        
+        $this->header_data = array();
+        $this->body_data = array();
+        $this->footer_data = array();
+        
+        $this->body_data["article_url"] = trim($this->input->get("url"));
+        
+        if(empty($this->body_data["article_url"]))
+            header("Location: " . $this->header_data["base_url"] . "index.php");
 
-		$metrics_data = array();
+        $this->load->helper("url");
+        $this->base_url = base_url();
+        $this->header_data["base_url"] = $this->base_url;
+        
+        $this->load->model("common_model");
+        
+        $this->header_data["recent_searches"] = $this->common_model->get_recent_searches($this->base_url);
+        
+        $this->body_data["article_title"] = $this->common_model->resolve_article_title($this->body_data["article_url"]);
+        $this->body_data["article_host"] = $this->common_model->resolve_article_host($this->body_data["article_url"]);
+        
+        $this->normalized_article_url = $this->common_model->normalize_article_url(parse_url($this->body_data["article_url"]));
+    }
 
-		$this->load->helper('url');
+    public function index()
+    {
+        $this->common_model->update_recent_searches_cookies($this->body_data["article_url"]);
+        
+        $this->header_data["page_title"] = $this->body_data["article_title"];
+        
+        $article = $this->common_model->get_article_by_id($this->normalized_article_url);
 
-		$header_data["base_url"] = base_url();
+        if (!empty($article))
+        {
+            $this->load->model("metrics_model");
 
-		$metrics_data["article_url"] = trim($this->input->get("url"));
+            $this->body_data["metrics"] = $this->metrics_model->get_metrics($this->normalized_article_url);
+        }
 
-		$parsed_article_url = parse_url($metrics_data["article_url"]);
+        $this->load->view("header", $this->header_data);
+        $this->load->view("metrics", $this->body_data);
+        $this->load->view("footer", $this->footer_data);
+    }
 
-		parse_str($parsed_article_url["query"], $query_string);
-
-		$header_data["article_title"] = str_replace("_", " ", $query_string["title"]);
-
-		$query_string["title"] = urldecode($query_string["title"]);
-
-		$metrics_data["article_url"] = 
-			$parsed_article_url["scheme"] .
-			"://" .
-			$parsed_article_url["host"] .
-			$parsed_article_url["path"] .
-			"?" .
-			http_build_query($query_string);
-
-		if(empty($metrics_data["article_url"]))
-
-			header("Location: " . $header_data["base_url"] . "index.php");
-
-		$mongo = new Mongo();
-
-		$db = $mongo->wiki_metrics_ucv;
-
-		$article = $db->articles->findOne(array("_id" => $metrics_data["article_url"]));		
-
-		if(empty($article))
-
-			# TODO
-			;
-
-		else
-		{
-			$revisions_count = $db->histories->group(
-				array(),
-				array("revisions" => array()),
-				"function(obj, prev){
-					var date = new Date(obj.date * 1000);
-					var dateKey = hex_md5(date.getFullYear() + '' + date.getMonth());
-					if(typeof prev.revisions[dateKey] != 'undefined')
-						prev.revisions[dateKey]['revisions'] += 1;
-					else
-					{
-						prev.revisions[dateKey] = Array();
-						prev.revisions[dateKey]['timestamp'] = obj.date;
-						prev.revisions[dateKey]['date'] = (date.getMonth() + 1) + '/' + date.getFullYear();
-						prev.revisions[dateKey]['revisions'] = 1;
-					}
-				}",
-				array("article" => $metrics_data["article_url"])
-			);
-
-			$metrics_data["revisions_count"] = $revisions_count["retval"][0]["revisions"];
-
-			usort($metrics_data["revisions_count"], function($first_element, $second_element) {
-				return $first_element["timestamp"] > $second_element["timestamp"];
-			});
-		}
-
-		$this->load->view('header', $header_data);
-
-		$this->load->view('metrics', $metrics_data);
-
-		$this->load->view('footer');
-	}
 }
 
 /* End of file metrics.php */

@@ -1,3 +1,6 @@
+v1.0.3
+	- Improved the front-end.
+	- Fixed the 'usernames' new line problem.
 v1.0.2
 	- Refactored the Daemon class.
 	- Standardized the file management of the Daemon and Console class.

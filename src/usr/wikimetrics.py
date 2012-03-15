@@ -6,6 +6,7 @@ from os.path import abspath, dirname
 from urlparse import urlparse, parse_qs
 from time import strptime, mktime, sleep, time
 from locale import LC_TIME, getlocale, setlocale
+from string import whitespace
 import md5
 
 # XCraper
@@ -207,10 +208,10 @@ class Wikimetrics:
 									"_id" : mediawiki_id,
 									"article" : article_url,
 									"date" : date,
-									"user" : self.scraper.user[index],
+									"user" : "".join(self.scraper.user[index].split()),
 									"minor" : True if self.scraper.minor[index] else False,
 									"size" :  int(size) if size else 0,
-									"comment" : self.scraper.comment[index].replace("\n", "") if self.scraper.comment[index] else None
+									"comment" : "".join(self.scraper.comment[index].split()) if self.scraper.comment[index] else None
 								}
 
 								try:
