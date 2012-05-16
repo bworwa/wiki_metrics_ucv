@@ -261,7 +261,7 @@ class Request:
 			
 		# We create our HTTP connection instance (no request sent yet)
 
-		connection = HTTPConnection(host, 80, False, 25)
+		connection = HTTPConnection(host, 80)
 
 		# And make the request for the 'path + query' specified resource (request sent)
 

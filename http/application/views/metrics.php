@@ -16,15 +16,20 @@
         <div class="section">
             Host:<h2 id="article_host"><?php echo $article_host; ?></h2>
         </div>
-        <div class="section">
-            <span class="float_left">Chart type:</span>
-            <ul id="chart_types">
-                <li id="line_chart" class="float_left selected opaque round_corners" title="Lines"></li>
-                <li id="column_chart" class="float_left translucid round_corners" title="Columns"></li>
-                <li id="bar_chart" class="float_left translucid round_corners" title="Bars"></li>
-            </ul>
-        </div>
-        <div id="chart"></div>
+        <?php if(!empty($metrics)): ?>
+            <div class="section">
+                <span class="float_left">Chart type:</span>
+                <ul id="chart_types">
+                    <li id="line_chart" class="float_left selected opaque round_corners" title="Lines"></li>
+                    <li id="column_chart" class="float_left translucid round_corners" title="Columns"></li>
+                    <li id="bar_chart" class="float_left translucid round_corners" title="Bars"></li>
+                    <li id="pie_chart" class="float_left translucid round_corners" title="Pie"></li>
+                </ul>
+            </div>
+            <div id="chart"></div>
+        <?php else: ?>
+            <div class="information">This article has not been parsed yet. Try again later</div>
+        <?php endif; ?>
     </div>
 </div>
 <script> var base_url = "<?php echo $base_url; ?>"; </script>
@@ -62,6 +67,7 @@
         users = new google.visualization.DataTable();
         users.addColumn("string", "Name");
         users.addColumn("number", "Total revisions");
+        users.addColumn("number", "Minor revisions");
 
         <?php
             if (!empty($metrics["date_related_metrics"]))
@@ -74,7 +80,7 @@
         <?php
              if (!empty($metrics["users_related_metrics"]))
                 foreach($metrics["users_related_metrics"] as $user => $revisions): ?>
-            users.addRows([["<?php echo $user; ?>", <?php echo $revisions; ?>]]);
+                    users.addRows([["<?php echo trim($user, "\""); ?>", <?php echo $revisions["total_revisions"]; ?>, <?php echo $revisions["minor_revisions"]; ?>]]);
         <?php   endforeach; ?>
             
         init_elements();
@@ -133,6 +139,19 @@
             
             $("#tabs .selected").click();
         });
+        
+        $("#pie_chart").click(function()
+        {
+            chart_type = "PieChart";
+            
+            if(!$(this).hasClass("selected"))
+            {
+                $(this).removeClass("translucid").addClass("selected opaque");
+                $(this).siblings().removeClass("selected opaque").addClass("translucid");
+            }
+            
+            $("#tabs .selected").click();
+        });
               
         draw_revisions_chart();
     }
@@ -178,9 +197,25 @@
             
             $("#chart").css("overflow-x", "hidden").css("overflow-y", "scroll");
         }
+        else if(chart_type == "PieChart")
+        {
+            chart_options.height = "90%";
+            chart_options.chartArea.height = chart_options.height;
+            
+            chart_options.width = "100%";
+            chart_options.chartArea.width = chart_options.width;
+            
+            chart_options.legend = { position: "right" };
+            
+            $("#chart").css("overflow-x", "hidden").css("overflow-y", "hidden");
+        }
         else
         {
-            chart_options.width = number_of_rows * 100;
+            if($("#tabs .selected").data("metric") == "users")
+                chart_options.width = number_of_rows * 200;
+            else
+                chart_options.width = number_of_rows * 125;
+            
             chart_options.chartArea.width = chart_options.width;
             
             chart_options.height = "80%";

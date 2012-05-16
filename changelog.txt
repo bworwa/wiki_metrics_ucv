@@ -1,3 +1,9 @@
+v1.0.4
+	- Added 'Check XPath query message'. When a wiki changes his markup structure it'll be informed.
+	- When a wiki changes his markup, resulting in having 0 new revisions all the time, we skip the 'last_update' update but we keep
+	  the priority update.
+	- Removed line breaks from comments and usernames before storing them into the database.
+	- Improved the front-end.
 v1.0.3
 	- Improved the front-end.
 	- Fixed the 'usernames' new line problem.

@@ -55,30 +55,70 @@ class Metrics_Model extends CI_Model
                     prev.metrics['date_related_metrics'][dateKey]['avg_size'] = (prev.metrics['date_related_metrics'][dateKey]['min_size'] + prev.metrics['date_related_metrics'][dateKey]['max_size']) / 2;           
                 }
                 
-                if(obj.user.match(/[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}/))
-                    if(typeof prev.metrics['users_related_metrics']['[Other]'] != 'undefined')
-                        prev.metrics['users_related_metrics']['[Other]'] += 1;
+
+                if(typeof prev.metrics['users_related_metrics'][obj.user] != 'undefined')
+                {
+                    if(obj.minor && typeof prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] != 'undefined')
+                        prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] += 1;
+                    else if(obj.minor && typeof prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] == 'undefined')
+                        prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] = 1;
+                        
+                    if(typeof prev.metrics['users_related_metrics'][obj.user]['total_revisions'] != 'undefined')
+                        prev.metrics['users_related_metrics'][obj.user]['total_revisions'] += 1;
                     else
-                        prev.metrics['users_related_metrics']['[Other]'] = 1;
+                        prev.metrics['users_related_metrics'][obj.user]['total_revisions'] = 1;
+                }
                 else
-                    if(typeof prev.metrics['users_related_metrics'][obj.user] != 'undefined')
-                        prev.metrics['users_related_metrics'][obj.user] += 1;
+                {
+                    prev.metrics['users_related_metrics'][obj.user] = Array();
+                        
+                    if(obj.minor && typeof prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] != 'undefined')
+                        prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] += 1;
+                    else if(obj.minor && typeof prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] == 'undefined')
+                        prev.metrics['users_related_metrics'][obj.user]['minor_revisions'] = 1;
+                        
+                    if(typeof prev.metrics['users_related_metrics'][obj.user]['total_revisions'] != 'undefined')
+                        prev.metrics['users_related_metrics'][obj.user]['total_revisions'] += 1;
                     else
-                        prev.metrics['users_related_metrics'][obj.user] = 1;
+                        prev.metrics['users_related_metrics'][obj.user]['total_revisions'] = 1;
+                }
             }",
             array("article" => $article_id)
         );
 
-        $metrics = $metrics["retval"][0]["metrics"];
+        if(!empty($metrics["retval"][0]["metrics"]))
+        {
+            $metrics = $metrics = $metrics["retval"][0]["metrics"];
+            
+            usort(
+                    $metrics["date_related_metrics"],
+                    function($first_element, $second_element)
+                    {
+                        return $first_element["timestamp"] > $second_element["timestamp"];
+                    }
+            );
 
-        usort(
-                $metrics["date_related_metrics"],
-                function($first_element, $second_element)
-                {
-                    return $first_element["timestamp"] > $second_element["timestamp"];
-                }
-        );       
+            foreach($metrics["users_related_metrics"] as &$metric)
+            {
+                if(!(array_key_exists("total_revisions", $metric)))
+                    $metric["total_revisions"] = 0;
+                if(!(array_key_exists("minor_revisions", $metric)))
+                    $metric["minor_revisions"] = 0;
+            }
 
+            uasort(
+                    $metrics["users_related_metrics"],
+                    function($first_element, $second_element)
+                    {                    
+                        return $first_element["total_revisions"] < $second_element["total_revisions"];
+                    }
+            );
+        }
+        else
+        {
+            $metrics = null;
+        }
+        
         return $metrics;
     }
 }

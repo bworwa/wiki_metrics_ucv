@@ -199,6 +199,24 @@ body
     background-image: url('img/bar_chart_icon.png');
 }
 
+#pie_chart
+{
+    background-image: url('img/pie_chart_icon.png');
+}
+
+.information
+{
+    width: 100%;
+    text-align: center;
+    margin: 10px auto;
+    padding: 10px 0 10px 0;
+    border: 1px solid gold;
+    background-color: lemonchiffon;
+    background-image: url('img/information_icon.png');
+    background-repeat: no-repeat;
+    background-position: 1% 50%;
+}
+
 .bold
 {
     font-weight: bold;

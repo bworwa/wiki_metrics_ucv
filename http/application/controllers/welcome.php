@@ -46,7 +46,8 @@ class Welcome extends CI_Controller
 
         $this->body_data["articles"] = array();
 
-        if (!empty($articles))            
+        if (!empty($articles))
+        {
             foreach ($articles as $article)                
                 array_push(
                         $this->body_data["articles"],
@@ -57,10 +58,11 @@ class Welcome extends CI_Controller
                         )
                 );
         
-        usort($this->body_data["articles"], function($first_element, $second_element)
-                {
-                    return $first_element["title"] > $second_element["title"];
-                });
+            usort($this->body_data["articles"], function($first_element, $second_element)
+                    {
+                        return $first_element["title"] > $second_element["title"];
+                    });
+        }
 
         $this->load->view('header', $this->header_data);
         $this->load->view('view_all_articles', $this->body_data);
